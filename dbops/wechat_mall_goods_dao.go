@@ -7,12 +7,16 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type goodsDao struct{}
+
+var GoodsDao = new(goodsDao)
+
 const goodsColumnList = `
 id, brand_name, title, price, discount_price, category_id, online, picture, 
 banner_picture, detail_picture, tags, sale_num, is_del, create_time, update_time
 `
 
-func QueryGoodsList(keyword, order string, categoryId, online, page, size int) (*[]model.WechatMallGoodsDO, error) {
+func (*goodsDao) List(keyword, order string, categoryId, online, page, size int) (*[]model.WechatMallGoodsDO, error) {
 	sql := "SELECT " + goodsColumnList + " FROM wechat_mall_goods WHERE is_del = 0"
 	if keyword != "" {
 		sql += " AND title LIKE '%" + keyword + "%'"
@@ -47,7 +51,7 @@ func QueryGoodsList(keyword, order string, categoryId, online, page, size int) (
 	return &goodsList, nil
 }
 
-func CountGoods(keyword string, categoryId, online int) (int, error) {
+func (*goodsDao) Count(keyword string, categoryId, online int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_goods WHERE is_del = 0"
 	if keyword != "" {
 		sql += " AND title LIKE '%" + keyword + "%'"
@@ -72,7 +76,7 @@ func CountGoods(keyword string, categoryId, online int) (int, error) {
 	return total, nil
 }
 
-func AddGoods(goods *model.WechatMallGoodsDO) (int64, error) {
+func (*goodsDao) Insert(goods *model.WechatMallGoodsDO) (int64, error) {
 	sql := "INSERT INTO wechat_mall_goods ( " + goodsColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -91,7 +95,7 @@ func AddGoods(goods *model.WechatMallGoodsDO) (int64, error) {
 	return i, nil
 }
 
-func QueryGoodsById(id int) (*model.WechatMallGoodsDO, error) {
+func (*goodsDao) QueryById(id int) (*model.WechatMallGoodsDO, error) {
 	sql := "SELECT " + goodsColumnList + " FROM wechat_mall_goods WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -110,7 +114,7 @@ func QueryGoodsById(id int) (*model.WechatMallGoodsDO, error) {
 	return &goods, nil
 }
 
-func UpdateGoodsById(goods *model.WechatMallGoodsDO) error {
+func (*goodsDao) UpdateById(goods *model.WechatMallGoodsDO) error {
 	sql := `
 UPDATE wechat_mall_goods 
 SET brand_name = ?, title = ?, price = ?, discount_price = ?, category_id = ?,
@@ -131,7 +135,7 @@ WHERE id = ?
 	return nil
 }
 
-func CountCategoryGoods(categoryId int) (int, error) {
+func (*goodsDao) CountByCategoryId(categoryId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_goods WHERE is_del = 0 AND category_id = " + strconv.Itoa(categoryId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -147,13 +151,13 @@ func CountCategoryGoods(categoryId int) (int, error) {
 	return total, nil
 }
 
-func UpdateCategoryGoodsOnlineStatus(categoryId, online int) error {
+func (*goodsDao) UpdateOnlineStatus(categoryId, online int) error {
 	sql := "UPDATE wechat_mall_goods SET update_time = now(), online = " + strconv.Itoa(online) + " WHERE is_del = 0 AND category_id = " + strconv.Itoa(categoryId)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
-func UpdateGoodsSaleNum(goodsId, num int) error {
+func (*goodsDao) UpdateSaleNum(goodsId, num int) error {
 	sql := "UPDATE wechat_mall_goods SET sale_num = sale_num + " + strconv.Itoa(num) + " WHERE id = " + strconv.Itoa(goodsId)
 	_, err := dbConn.Exec(sql)
 	return err

@@ -27,11 +27,11 @@ func NewSpecificationService() ISpecificationService {
 }
 
 func (ss *specificationService) GetSpecificationList(page, size int) (*[]model.WechatMallSpecificationDO, int) {
-	specList, err := dbops.QuerySpecificationList(page, size)
+	specList, err := dbops.SpecDao.List(page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountSpecification()
+	total, err := dbops.SpecDao.Count()
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func (ss *specificationService) GetSpecificationList(page, size int) (*[]model.W
 }
 
 func (ss *specificationService) GetSpecificationById(id int) *model.WechatMallSpecificationDO {
-	spec, err := dbops.QuerySpecificationById(id)
+	spec, err := dbops.SpecDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func (ss *specificationService) GetSpecificationById(id int) *model.WechatMallSp
 }
 
 func (ss *specificationService) GetSpecificationByName(name string) *model.WechatMallSpecificationDO {
-	spec, err := dbops.QuerySpecificationByName(name)
+	spec, err := dbops.SpecDao.QueryByName(name)
 	if err != nil {
 		panic(err)
 	}
@@ -55,21 +55,21 @@ func (ss *specificationService) GetSpecificationByName(name string) *model.Wecha
 }
 
 func (ss *specificationService) UpdateSpecificationById(spec *model.WechatMallSpecificationDO) {
-	err := dbops.UpdateSpecificationById(spec)
+	err := dbops.SpecDao.UpdateById(spec)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (ss *specificationService) AddSpecification(spec *model.WechatMallSpecificationDO) {
-	err := dbops.AddSpecification(spec)
+	err := dbops.SpecDao.Insert(spec)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (ss *specificationService) GetSpecificationAttrList(specId int) *[]model.WechatMallSpecificationAttrDO {
-	attrList, err := dbops.QuerySpecificationAttrList(specId)
+	attrList, err := dbops.SpecAttrDao.ListBySpecId(specId)
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +77,7 @@ func (ss *specificationService) GetSpecificationAttrList(specId int) *[]model.We
 }
 
 func (ss *specificationService) GetSpecificationAttrById(id int) *model.WechatMallSpecificationAttrDO {
-	attr, err := dbops.QuerySpecificationAttrById(id)
+	attr, err := dbops.SpecAttrDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +85,7 @@ func (ss *specificationService) GetSpecificationAttrById(id int) *model.WechatMa
 }
 
 func (ss *specificationService) GetSpecificationAttrByValue(value string) *model.WechatMallSpecificationAttrDO {
-	spec, err := dbops.QuerySpecificationAttrByValue(value)
+	spec, err := dbops.SpecAttrDao.QueryByValue(value)
 	if err != nil {
 		panic(err)
 	}
@@ -93,14 +93,14 @@ func (ss *specificationService) GetSpecificationAttrByValue(value string) *model
 }
 
 func (ss *specificationService) UpdateSpecificationAttrById(attr *model.WechatMallSpecificationAttrDO) {
-	err := dbops.UpdateSpecificationAttrById(attr)
+	err := dbops.SpecAttrDao.UpdateById(attr)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (ss *specificationService) AddSpecificationAttr(attr *model.WechatMallSpecificationAttrDO) {
-	err := dbops.AddSpecificationAttr(attr)
+	err := dbops.SpecAttrDao.Insert(attr)
 	if err != nil {
 		panic(err)
 	}

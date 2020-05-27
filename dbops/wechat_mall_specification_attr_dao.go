@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type specAttrDao struct{}
+
+var SpecAttrDao = new(specAttrDao)
+
 const specAttrColumnList = `
 id, spec_id, value, extend, is_del, create_time, update_time
 `
 
-func QuerySpecificationAttrList(specId int) (*[]model.WechatMallSpecificationAttrDO, error) {
+func (*specAttrDao) ListBySpecId(specId int) (*[]model.WechatMallSpecificationAttrDO, error) {
 	sql := "SELECT " + specAttrColumnList + " FROM wechat_mall_specification_attr WHERE is_del = 0 AND spec_id = " + strconv.Itoa(specId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -28,7 +32,7 @@ func QuerySpecificationAttrList(specId int) (*[]model.WechatMallSpecificationAtt
 	return &attrList, nil
 }
 
-func AddSpecificationAttr(spec *model.WechatMallSpecificationAttrDO) error {
+func (*specAttrDao) Insert(spec *model.WechatMallSpecificationAttrDO) error {
 	sql := "INSERT INTO wechat_mall_specification_attr ( " + specAttrColumnList[4:] + " ) VALUES(?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -41,7 +45,7 @@ func AddSpecificationAttr(spec *model.WechatMallSpecificationAttrDO) error {
 	return nil
 }
 
-func QuerySpecificationAttrById(id int) (*model.WechatMallSpecificationAttrDO, error) {
+func (*specAttrDao) QueryById(id int) (*model.WechatMallSpecificationAttrDO, error) {
 	sql := "SELECT " + specAttrColumnList + " FROM wechat_mall_specification_attr WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -57,7 +61,7 @@ func QuerySpecificationAttrById(id int) (*model.WechatMallSpecificationAttrDO, e
 	return &attr, nil
 }
 
-func QuerySpecificationAttrByValue(name string) (*model.WechatMallSpecificationAttrDO, error) {
+func (*specAttrDao) QueryByValue(name string) (*model.WechatMallSpecificationAttrDO, error) {
 	sql := "SELECT " + specAttrColumnList + " FROM wechat_mall_specification_attr WHERE is_del = 0 AND value = '" + name + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -73,7 +77,7 @@ func QuerySpecificationAttrByValue(name string) (*model.WechatMallSpecificationA
 	return &attr, nil
 }
 
-func UpdateSpecificationAttrById(attr *model.WechatMallSpecificationAttrDO) error {
+func (*specAttrDao) UpdateById(attr *model.WechatMallSpecificationAttrDO) error {
 	sql := `
 UPDATE wechat_mall_specification_attr 
 SET spec_id = ?, value = ?, extend = ?, is_del = ?, update_time = ? 

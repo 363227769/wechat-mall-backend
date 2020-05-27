@@ -23,11 +23,11 @@ func NewGridCategoryService() IGridCategoryService {
 }
 
 func (g *gridCategoryService) GetGridCategoryList(page, size int) (*[]model.WechatMallGridCategoryDO, int) {
-	gridCList, err := dbops.QueryGridCategoryList(page, size)
+	gridCList, err := dbops.GridCategoryDao.List(page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountGridCategory()
+	total, err := dbops.GridCategoryDao.Count()
 	if err != nil {
 		panic(err)
 	}
@@ -35,7 +35,7 @@ func (g *gridCategoryService) GetGridCategoryList(page, size int) (*[]model.Wech
 }
 
 func (g *gridCategoryService) GetGridCategoryById(id int) *model.WechatMallGridCategoryDO {
-	gridC, err := dbops.QueryGridCategoryById(id)
+	gridC, err := dbops.GridCategoryDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func (g *gridCategoryService) GetGridCategoryById(id int) *model.WechatMallGridC
 }
 
 func (g *gridCategoryService) GetGridCategoryByName(name string) *model.WechatMallGridCategoryDO {
-	gridC, err := dbops.QueryGridCategoryByName(name)
+	gridC, err := dbops.GridCategoryDao.QueryByName(name)
 	if err != nil {
 		panic(err)
 	}
@@ -51,14 +51,14 @@ func (g *gridCategoryService) GetGridCategoryByName(name string) *model.WechatMa
 }
 
 func (g *gridCategoryService) AddGridCategory(gridC *model.WechatMallGridCategoryDO) {
-	err := dbops.InsertGridCategory(gridC)
+	err := dbops.GridCategoryDao.Insert(gridC)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (g *gridCategoryService) UpdateGridCategory(gridC *model.WechatMallGridCategoryDO) {
-	err := dbops.UpdateGridCategoryById(gridC)
+	err := dbops.GridCategoryDao.Update(gridC)
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func (g *gridCategoryService) UpdateGridCategory(gridC *model.WechatMallGridCate
 
 // 统计分类绑定的宫格
 func (g *gridCategoryService) CountCategoryBindGrid(categoryId int) int {
-	total, err := dbops.CountGridByCategoryId(categoryId)
+	total, err := dbops.GridCategoryDao.CountByCategoryId(categoryId)
 	if err != nil {
 		panic(err)
 	}

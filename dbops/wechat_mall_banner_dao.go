@@ -7,11 +7,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type bannerDao struct{}
+
+var BannerDao = new(bannerDao)
+
 const bannerColumnList = `
 id, picture, name, business_type, business_id, status, is_del, create_time, update_time
 `
 
-func QueryBannerList(status, page, size int) (*[]model.WechatMallBannerDO, error) {
+func (*bannerDao) List(status, page, size int) (*[]model.WechatMallBannerDO, error) {
 	sql := "SELECT " + bannerColumnList + "FROM wechat_mall_banner WHERE is_del = 0"
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)
@@ -33,7 +37,7 @@ func QueryBannerList(status, page, size int) (*[]model.WechatMallBannerDO, error
 	return &bannerList, nil
 }
 
-func CountBanner(status int) (int, error) {
+func (*bannerDao) CountByStatus(status int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_banner WHERE is_del = 0"
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)
@@ -52,7 +56,7 @@ func CountBanner(status int) (int, error) {
 	return total, nil
 }
 
-func QueryBannerById(id int) (*model.WechatMallBannerDO, error) {
+func (*bannerDao) QueryBanner(id int) (*model.WechatMallBannerDO, error) {
 	sql := "SELECT " + bannerColumnList + " FROM wechat_mall_banner WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -68,7 +72,7 @@ func QueryBannerById(id int) (*model.WechatMallBannerDO, error) {
 	return &banner, nil
 }
 
-func InsertBanner(banner *model.WechatMallBannerDO) (int64, error) {
+func (*bannerDao) Insert(banner *model.WechatMallBannerDO) (int64, error) {
 	sql := "INSERT INTO wechat_mall_banner( " + bannerColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -85,7 +89,7 @@ func InsertBanner(banner *model.WechatMallBannerDO) (int64, error) {
 	return autoId, nil
 }
 
-func UpdateBannerById(banner *model.WechatMallBannerDO) error {
+func (*bannerDao) Update(banner *model.WechatMallBannerDO) error {
 	sql := `
 UPDATE wechat_mall_banner 
 SET picture = ?, name = ?, business_type  = ?, business_id = ?,  status = ?, is_del = ?, update_time = ?

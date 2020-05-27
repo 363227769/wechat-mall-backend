@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type specDao struct{}
+
+var SpecDao = new(specDao)
+
 const specColumnList = `
 id, name, description, unit, standard, is_del, create_time, update_time
 `
 
-func QuerySpecificationList(page, size int) (*[]model.WechatMallSpecificationDO, error) {
+func (*specDao) List(page, size int) (*[]model.WechatMallSpecificationDO, error) {
 	sql := "SELECT " + specColumnList + " FROM wechat_mall_specification WHERE is_del = 0 LIMIT ?, ?"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -32,7 +36,7 @@ func QuerySpecificationList(page, size int) (*[]model.WechatMallSpecificationDO,
 	return &specList, nil
 }
 
-func CountSpecification() (int, error) {
+func (*specDao) Count() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_specification WHERE is_del = 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -48,7 +52,7 @@ func CountSpecification() (int, error) {
 	return total, nil
 }
 
-func AddSpecification(spec *model.WechatMallSpecificationDO) error {
+func (*specDao) Insert(spec *model.WechatMallSpecificationDO) error {
 	sql := "INSERT INTO wechat_mall_specification ( " + specColumnList[4:] + " ) VALUES(?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -61,7 +65,7 @@ func AddSpecification(spec *model.WechatMallSpecificationDO) error {
 	return nil
 }
 
-func QuerySpecificationById(id int) (*model.WechatMallSpecificationDO, error) {
+func (*specDao) QueryById(id int) (*model.WechatMallSpecificationDO, error) {
 	sql := "SELECT " + specColumnList + " FROM wechat_mall_specification WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -77,7 +81,7 @@ func QuerySpecificationById(id int) (*model.WechatMallSpecificationDO, error) {
 	return &spec, nil
 }
 
-func QuerySpecificationByName(name string) (*model.WechatMallSpecificationDO, error) {
+func (*specDao) QueryByName(name string) (*model.WechatMallSpecificationDO, error) {
 	sql := "SELECT " + specColumnList + " FROM wechat_mall_specification WHERE is_del = 0 AND name = '" + name + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -93,7 +97,7 @@ func QuerySpecificationByName(name string) (*model.WechatMallSpecificationDO, er
 	return &spec, nil
 }
 
-func UpdateSpecificationById(spec *model.WechatMallSpecificationDO) error {
+func (*specDao) UpdateById(spec *model.WechatMallSpecificationDO) error {
 	sql := `
 UPDATE wechat_mall_specification 
 SET name = ?, description = ?, unit = ?, standard = ?, is_del = ?, update_time = ? 

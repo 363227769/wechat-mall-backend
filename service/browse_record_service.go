@@ -12,8 +12,7 @@ type IBrowseRecordService interface {
 	ClearBrowseHistory(ids []int)
 }
 
-type browseRecordService struct {
-}
+type browseRecordService struct{}
 
 func NewBrowseRecordService() IBrowseRecordService {
 	service := &browseRecordService{}
@@ -21,24 +20,24 @@ func NewBrowseRecordService() IBrowseRecordService {
 }
 
 func (s *browseRecordService) AddBrowseRecord(record *model.WechatMallGoodsBrowseRecord) {
-	recordDO, err := dbops.SelectGoodsBrowse(record.UserId, record.GoodsId)
+	recordDO, err := dbops.BrowseRecordDao.List(record.UserId, record.GoodsId)
 	if err != nil {
 		panic(err)
 	}
 	if recordDO.Id != 0 {
-		err := dbops.DeleteBrowseRecordById(recordDO.Id)
+		err := dbops.BrowseRecordDao.DeleteById(recordDO.Id)
 		if err != nil {
 			panic(err)
 		}
 	}
-	err = dbops.InsertBrowseRecord(record)
+	err = dbops.BrowseRecordDao.Insert(record)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *browseRecordService) ListBrowseRecord(userId, page, size int) (*[]defs.PortalBrowseRecordVO, int) {
-	records, err := dbops.SelectGoodsBrowseByUserId(userId, page, size)
+	records, err := dbops.BrowseRecordDao.ListByPage(userId, page, size)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +52,7 @@ func (s *browseRecordService) ListBrowseRecord(userId, page, size int) (*[]defs.
 		recordVO.BrowseTime = recordDO.UpdateTime
 		recordVOs = append(recordVOs, recordVO)
 	}
-	total, err := dbops.CountGoodsBrowseByUserId(userId)
+	total, err := dbops.BrowseRecordDao.CountByUserId(userId)
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +61,7 @@ func (s *browseRecordService) ListBrowseRecord(userId, page, size int) (*[]defs.
 
 func (s *browseRecordService) ClearBrowseHistory(ids []int) {
 	for _, v := range ids {
-		err := dbops.DeleteBrowseRecordById(v)
+		err := dbops.BrowseRecordDao.DeleteById(v)
 		if err != nil {
 			panic(err)
 		}

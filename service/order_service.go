@@ -72,7 +72,7 @@ func (s *orderService) GenerateOrder(userId, addressId, couponLogId int, dispatc
 	orderDO.AddressId = addressId
 	orderDO.AddressSnapshot = addressSnap
 	orderDO.WxappPrepayId = prepayId
-	err := dbops.AddOrder(&orderDO)
+	err := dbops.OrderDao.Insert(&orderDO)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +87,7 @@ func checkCartGoodsAndStock(goodsList []defs.PortalCartGoods) decimal.Decimal {
 	goodsAmount := decimal.NewFromInt(0)
 	for _, v := range goodsList {
 		if v.CartId != 0 {
-			cartDO, err := dbops.SelectCartById(v.CartId)
+			cartDO, err := dbops.CartDao.QueryById(v.CartId)
 			if err != nil {
 				panic(err)
 			}
@@ -95,14 +95,14 @@ func checkCartGoodsAndStock(goodsList []defs.PortalCartGoods) decimal.Decimal {
 				panic(errs.ErrorGoodsCart)
 			}
 		}
-		goodsDO, err := dbops.QueryGoodsById(v.GoodsId)
+		goodsDO, err := dbops.GoodsDao.QueryById(v.GoodsId)
 		if err != nil {
 			panic(err)
 		}
 		if goodsDO.Id == defs.ZERO || goodsDO.Del == defs.DELETE || goodsDO.Online == defs.OFFLINE {
 			panic(errs.NewErrorOrder("商品下架，无法售出"))
 		}
-		skuDO, err := dbops.GetSKUById(v.SkuId)
+		skuDO, err := dbops.SkuDao.GetById(v.SkuId)
 		if err != nil {
 			panic(err)
 		}
@@ -127,14 +127,14 @@ func calcGoodsDiscountAmount(goodsAmount decimal.Decimal, userId, couponLogId in
 	if couponLogId == 0 {
 		return decimal.NewFromInt(0)
 	}
-	couponLog, err := dbops.QueryCouponLogById(couponLogId)
+	couponLog, err := dbops.CouponLogDao.QueryById(couponLogId)
 	if err != nil {
 		panic(err)
 	}
 	if couponLog.Id == defs.ZERO || couponLog.Del == defs.DELETE || couponLog.Status != 0 || couponLog.UserId != userId {
 		panic(errs.NewErrorCoupon("无效的优惠券！"))
 	}
-	coupon, err := dbops.QueryCouponById(couponLog.CouponId)
+	coupon, err := dbops.CouponDao.QueryById(couponLog.CouponId)
 	if err != nil {
 		panic(err)
 	}
@@ -191,7 +191,7 @@ func calcGoodsDiscountAmount(goodsAmount decimal.Decimal, userId, couponLogId in
 }
 
 func getAddressSnapshot(addressId int) string {
-	addressDO, err := dbops.QueryUserAddressById(addressId)
+	addressDO, err := dbops.UserAddressDao.QueryById(addressId)
 	if err != nil {
 		panic(err)
 	}
@@ -224,8 +224,8 @@ func (s *orderService) generateWxpayPrepayId(orderNo string, payAmount string) s
 // 订单详情-快照
 func orderGoodsSnapshot(userId int, orderNo string, goodsList []defs.PortalCartGoods) {
 	for _, v := range goodsList {
-		goodsDO, _ := dbops.QueryGoodsById(v.GoodsId)
-		skuDO, _ := dbops.GetSKUById(v.SkuId)
+		goodsDO, _ := dbops.GoodsDao.QueryById(v.GoodsId)
+		skuDO, _ := dbops.SkuDao.GetById(v.SkuId)
 
 		orderGoodsDO := model.WechatMallOrderGoodsDO{}
 		orderGoodsDO.OrderNo = orderNo
@@ -238,17 +238,17 @@ func orderGoodsSnapshot(userId int, orderNo string, goodsList []defs.PortalCartG
 		orderGoodsDO.Specs = skuDO.Specs
 		orderGoodsDO.Num = v.Num
 		orderGoodsDO.LockStatus = 0
-		err := dbops.AddOrderGoods(&orderGoodsDO)
+		err := dbops.OrderGoodsDao.Insert(&orderGoodsDO)
 		if err != nil {
 			panic(err)
 		}
 		// 减库存
-		err = dbops.UpdateSkuStockById(v.SkuId, v.Num)
+		err = dbops.SkuDao.UpdateSkuStockById(v.SkuId, v.Num)
 		if err != nil {
 			panic(err)
 		}
 		// 商品销量
-		err = dbops.UpdateGoodsSaleNum(v.GoodsId, v.Num)
+		err = dbops.GoodsDao.UpdateSaleNum(v.GoodsId, v.Num)
 		if err != nil {
 			panic(err)
 		}
@@ -259,12 +259,12 @@ func orderGoodsSnapshot(userId int, orderNo string, goodsList []defs.PortalCartG
 func clearUserCart(goodsList []defs.PortalCartGoods) {
 	for _, v := range goodsList {
 		if v.CartId != 0 {
-			cartDO, _ := dbops.SelectCartById(v.CartId)
+			cartDO, _ := dbops.CartDao.QueryById(v.CartId)
 			if cartDO.Id == defs.ZERO || cartDO.Del == defs.DELETE {
 				continue
 			}
 			cartDO.Del = defs.DELETE
-			err := dbops.UpdateCartById(cartDO)
+			err := dbops.CartDao.UpdateById(cartDO)
 			if err != nil {
 				panic(err)
 			}
@@ -274,24 +274,24 @@ func clearUserCart(goodsList []defs.PortalCartGoods) {
 
 // 优惠券-核销
 func couponCannel(couponLogId int) {
-	couponLogDO, _ := dbops.QueryCouponLogById(couponLogId)
+	couponLogDO, _ := dbops.CouponLogDao.QueryById(couponLogId)
 	if couponLogDO.Id == 0 {
 		return
 	}
 	couponLogDO.Status = 1
 	couponLogDO.UseTime = time.Now().Format("2006-01-02 15:04:05")
-	err := dbops.UpdateCouponLogById(couponLogDO)
+	err := dbops.CouponLogDao.UpdateById(couponLogDO)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *orderService) QueryOrderList(userId, status, page, size int) (*[]defs.PortalOrderListVO, int) {
-	orderList, err := dbops.ListOrderByParams(userId, status, page, size)
+	orderList, err := dbops.OrderDao.ListByParams(userId, status, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountOrderByParams(userId, status)
+	total, err := dbops.OrderDao.CountByParams(userId, status)
 	if err != nil {
 		panic(err)
 	}
@@ -310,7 +310,7 @@ func (s *orderService) QueryOrderList(userId, status, page, size int) (*[]defs.P
 }
 
 func extraceOrderGoods(orderNo string) ([]defs.PortalOrderGoodsVO, int) {
-	orderGoodsList, err := dbops.QueryOrderGoods(orderNo)
+	orderGoodsList, err := dbops.OrderGoodsDao.List(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -344,7 +344,7 @@ func extraceOrderGoods(orderNo string) ([]defs.PortalOrderGoodsVO, int) {
 }
 
 func (s *orderService) QueryOrderDetail(userId int, orderNo string) *defs.PortalOrderDetailVO {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -362,7 +362,7 @@ func (s *orderService) QueryOrderDetail(userId int, orderNo string) *defs.Portal
 	}
 	orderGoods, orderGoodsNum := extraceOrderGoods(orderDO.OrderNo)
 	// 退款信息
-	refundDO, err := dbops.QueryOrderRefundRecord(orderNo)
+	refundDO, err := dbops.OrderRefundDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -388,7 +388,7 @@ func (s *orderService) QueryOrderDetail(userId int, orderNo string) *defs.Portal
 }
 
 func (s *orderService) OrderPaySuccessNotify(orderNo string) {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -401,14 +401,14 @@ func (s *orderService) OrderPaySuccessNotify(orderNo string) {
 	}
 	orderDO.Status = 1
 	orderDO.PayTime = time.Now().Format("2006-01-02 15:04:05")
-	err = dbops.UpdateOrderById(orderDO)
+	err = dbops.OrderDao.UpdateById(orderDO)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *orderService) QueryOrderSaleData(page, size int) *[]defs.OrderSaleData {
-	saleData, err := dbops.QueryOrderSaleData(page, size)
+	saleData, err := dbops.OrderDao.QuerySaleData(page, size)
 	if err != nil {
 		panic(err)
 	}
@@ -417,7 +417,7 @@ func (s *orderService) QueryOrderSaleData(page, size int) *[]defs.OrderSaleData 
 
 // 统计-订单数量
 func (s *orderService) CountOrderNum(userId, status int) int {
-	orderNum, err := dbops.CountOrderNum(userId, status)
+	orderNum, err := dbops.OrderDao.CountNum(userId, status)
 	if err != nil {
 		return 0
 	}
@@ -426,7 +426,7 @@ func (s *orderService) CountOrderNum(userId, status int) int {
 
 // 统计-待处理的退款订单数量
 func (s *orderService) CountPendingOrderRefund() int {
-	total, err := dbops.CountPendingOrderRefund()
+	total, err := dbops.OrderRefundDao.CountPendingOrderRefund()
 	if err != nil {
 		panic(err)
 	}
@@ -435,7 +435,7 @@ func (s *orderService) CountPendingOrderRefund() int {
 
 // 订单-取消订单
 func (s *orderService) CancelOrder(userId, orderId int) {
-	orderDO, err := dbops.QueryOrderById(orderId)
+	orderDO, err := dbops.OrderDao.QueryById(orderId)
 	if err != nil {
 		panic(err)
 	}
@@ -450,7 +450,7 @@ func (s *orderService) CancelOrder(userId, orderId int) {
 	}
 	orderDO.Status = -1
 	orderDO.FinishTime = time.Now().Format("2006-01-02 15:04:05")
-	err = dbops.UpdateOrderById(orderDO)
+	err = dbops.OrderDao.UpdateById(orderDO)
 	if err != nil {
 		panic(err)
 	}
@@ -460,16 +460,16 @@ func (s *orderService) CancelOrder(userId, orderId int) {
 // 订单-库存回滚
 // 场景：取消订单（手动取消、超时未支付）、订单退款
 func orderStockRollback(orderNo string) {
-	orderGoods, err := dbops.QueryOrderGoods(orderNo)
+	orderGoods, err := dbops.OrderGoodsDao.List(orderNo)
 	if err != nil {
 		panic(err)
 	}
 	for _, v := range *orderGoods {
-		err := dbops.UpdateSkuStockById(v.SkuId, -v.Num)
+		err := dbops.SkuDao.UpdateSkuStockById(v.SkuId, -v.Num)
 		if err != nil {
 			panic(err)
 		}
-		err = dbops.UpdateGoodsSaleNum(v.GoodsId, -v.Num)
+		err = dbops.GoodsDao.UpdateSaleNum(v.GoodsId, -v.Num)
 		if err != nil {
 			panic(err)
 		}
@@ -478,7 +478,7 @@ func orderStockRollback(orderNo string) {
 
 // 订单-删除记录
 func (s *orderService) DeleteOrderRecord(userId, orderId int) {
-	orderDO, err := dbops.QueryOrderById(orderId)
+	orderDO, err := dbops.OrderDao.QueryById(orderId)
 	if err != nil {
 		panic(err)
 	}
@@ -490,7 +490,7 @@ func (s *orderService) DeleteOrderRecord(userId, orderId int) {
 	}
 	if orderDO.Status == -1 || orderDO.Status == 3 || orderDO.Status == 5 {
 		orderDO.Del = 1
-		err := dbops.UpdateOrderById(orderDO)
+		err := dbops.OrderDao.UpdateById(orderDO)
 		if err != nil {
 			panic(err)
 		}
@@ -501,7 +501,7 @@ func (s *orderService) DeleteOrderRecord(userId, orderId int) {
 
 // 订单-确认收货
 func (s *orderService) ConfirmTakeGoods(userId, orderId int) {
-	orderDO, err := dbops.QueryOrderById(orderId)
+	orderDO, err := dbops.OrderDao.QueryById(orderId)
 	if err != nil {
 		panic(err)
 	}
@@ -514,7 +514,7 @@ func (s *orderService) ConfirmTakeGoods(userId, orderId int) {
 	if orderDO.Status == 2 {
 		orderDO.Status = 3
 		orderDO.FinishTime = time.Now().Format("2006-01-02 15:04:05")
-		err := dbops.UpdateOrderById(orderDO)
+		err := dbops.OrderDao.UpdateById(orderDO)
 		if err != nil {
 			panic(err)
 		}
@@ -522,7 +522,7 @@ func (s *orderService) ConfirmTakeGoods(userId, orderId int) {
 }
 
 func (s *orderService) RefundApply(userId int, orderNo, reason string) string {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -543,12 +543,12 @@ func (s *orderService) RefundApply(userId int, orderNo, reason string) string {
 	refund.Reason = reason
 	refund.RefundTime = "2006-01-02 15:04:05"
 	refund.RefundAmount = orderDO.PayAmount
-	err = dbops.AddRefundRecord(&refund)
+	err = dbops.OrderRefundDao.Insert(&refund)
 	if err != nil {
 		panic(err)
 	}
 	orderDO.Status = 4
-	err = dbops.UpdateOrderById(orderDO)
+	err = dbops.OrderDao.UpdateById(orderDO)
 	if err != nil {
 		panic(err)
 	}
@@ -556,7 +556,7 @@ func (s *orderService) RefundApply(userId int, orderNo, reason string) string {
 }
 
 func (s *orderService) QueryRefundDetail(userId int, refundNo string) *defs.OrderRefundDetailVO {
-	refundDO, err := dbops.QueryRefundRecord(refundNo)
+	refundDO, err := dbops.OrderRefundDao.QueryByRefundNo(refundNo)
 	if err != nil {
 		panic(err)
 	}
@@ -578,7 +578,7 @@ func (s *orderService) QueryRefundDetail(userId int, refundNo string) *defs.Orde
 }
 
 func (s *orderService) UndoRefundApply(userId int, refundNo string) {
-	refundDO, err := dbops.QueryRefundRecord(refundNo)
+	refundDO, err := dbops.OrderRefundDao.QueryByRefundNo(refundNo)
 	if err != nil {
 		panic(err)
 	}
@@ -592,27 +592,27 @@ func (s *orderService) UndoRefundApply(userId int, refundNo string) {
 		panic(errs.NewErrorOrderRefund("状态异常"))
 	}
 	// 订单：待收货
-	orderDO, err := dbops.QueryOrderByOrderNo(refundDO.OrderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(refundDO.OrderNo)
 	if err != nil {
 		panic(err)
 	}
 	orderDO.Status = 1
-	err = dbops.UpdateOrderById(orderDO)
+	err = dbops.OrderDao.UpdateById(orderDO)
 	if err != nil {
 		panic(err)
 	}
-	err = dbops.UpdateRefundApply(refundDO.Id, 2)
+	err = dbops.OrderRefundDao.Update(refundDO.Id, 2)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *orderService) QueryCMSOrderList(status, searchType int, keyword, startTime, endTime string, page, size int) (*[]defs.CMSOrderInfoVO, int) {
-	orderList, err := dbops.SelectCMSOrderList(status, searchType, keyword, startTime, endTime, page, size)
+	orderList, err := dbops.OrderDao.CMSOrderList(status, searchType, keyword, startTime, endTime, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.SelectCMSOrderNum(status, searchType, keyword, startTime, endTime)
+	total, err := dbops.OrderDao.CountCMSOrderNum(status, searchType, keyword, startTime, endTime)
 	if err != nil {
 		panic(err)
 	}
@@ -642,7 +642,7 @@ func (s *orderService) QueryCMSOrderList(status, searchType int, keyword, startT
 }
 
 func (s *orderService) ExportCMSOrderExcel(status, searchType int, keyword, startTime, endTime string) string {
-	orderList, err := dbops.SelectCMSOrderList(status, searchType, keyword, startTime, endTime, 0, 0)
+	orderList, err := dbops.OrderDao.CMSOrderList(status, searchType, keyword, startTime, endTime, 0, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -769,7 +769,7 @@ func extractOrderGoodsSpecs(specs string) string {
 }
 
 func (s *orderService) QueryCMSOrderDetail(orderNo string) *defs.CMSOrderInfoVO {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -798,7 +798,7 @@ func (s *orderService) QueryCMSOrderDetail(orderNo string) *defs.CMSOrderInfoVO 
 
 // 提取订单中的商品
 func extractOrderGoodsVO(orderNo string) []defs.CMSOrderGoodsVO {
-	goodsDOList, err := dbops.QueryOrderGoods(orderNo)
+	goodsDOList, err := dbops.OrderGoodsDao.List(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -829,7 +829,7 @@ func extractOrderAddress(addressSnapshot string) *defs.AddressSnapshot {
 
 // 订单-提取买家信息
 func extractOrderBuyer(uid int) *defs.BasicUser {
-	userDO, e := dbops.GetUserById(uid)
+	userDO, e := dbops.UserDao.GetById(uid)
 	if e != nil {
 		panic(e)
 	}
@@ -846,7 +846,7 @@ func (s *orderService) ModifyOrderStatus(orderNo string, otype int) {
 		待收货：2-确认收货
 		待付款：3-确认付款
 	*/
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(errs.NewErrorOrder("订单不存在"))
 	}
@@ -873,32 +873,32 @@ func (s *orderService) ModifyOrderStatus(orderNo string, otype int) {
 	params := model.WechatMallOrderDO{}
 	params.Id = orderDO.Id
 	params.Status = newStatus
-	err = dbops.UpdateOrderById(&params)
+	err = dbops.OrderDao.UpdateById(&params)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *orderService) ModifyOrderRemark(orderNo, remark string) {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(errs.NewErrorOrder("订单不存在"))
 	}
-	err = dbops.UpdateOrderRemark(orderDO.Id, remark)
+	err = dbops.OrderDao.UpdateRemark(orderDO.Id, remark)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *orderService) ModifyOrderGoods(orderNo string, goodsId int, price string) {
-	orderDO, err := dbops.QueryOrderByOrderNo(orderNo)
+	orderDO, err := dbops.OrderDao.QueryByOrderNo(orderNo)
 	if err != nil {
 		panic(errs.NewErrorOrder("订单不存在"))
 	}
 	if orderDO.Status != 0 {
 		panic(errs.NewErrorOrder("非法操作"))
 	}
-	goodsList, err := dbops.QueryOrderGoods(orderNo)
+	goodsList, err := dbops.OrderGoodsDao.List(orderNo)
 	if err != nil {
 		panic(err)
 	}
@@ -915,7 +915,7 @@ func (s *orderService) ModifyOrderGoods(orderNo string, goodsId int, price strin
 	params := model.WechatMallOrderGoodsDO{}
 	params.Id = orderGoods.Id
 	params.Price = price
-	err = dbops.UpdateOrderGoods(&params)
+	err = dbops.OrderGoodsDao.Update(&params)
 	if err != nil {
 		panic(err)
 	}
@@ -931,7 +931,7 @@ func (s *orderService) ModifyOrderGoods(orderNo string, goodsId int, price strin
 	orderParams.Id = orderDO.Id
 	orderParams.PayAmount = payAmount.Add(diffAmount).String()
 	orderParams.GoodsAmount = goodsAmount.Add(diffAmount).String()
-	err = dbops.UpdateOrderById(&orderParams)
+	err = dbops.OrderDao.UpdateById(&orderParams)
 	if err != nil {
 		panic(err)
 	}

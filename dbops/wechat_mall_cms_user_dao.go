@@ -6,6 +6,10 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type cmsUserDao struct{}
+
+var CMSUserDao = new(cmsUserDao)
+
 const cmsUserColumnList = `
 id, username, password, email, mobile, avatar, group_id, is_del, create_time, update_time
 `
@@ -14,7 +18,7 @@ const cmsUserGroupColumnList = `
 id, name, description, is_del, create_time, update_time
 `
 
-func GetCMSUserByUsername(username string) (*model.WechatMallCMSUserDO, error) {
+func (*cmsUserDao) GetByUsername(username string) (*model.WechatMallCMSUserDO, error) {
 	sql := "SELECT " + cmsUserColumnList + " FROM wechat_mall_cms_user WHERE is_del = 0 AND username = '" + username + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -31,7 +35,7 @@ func GetCMSUserByUsername(username string) (*model.WechatMallCMSUserDO, error) {
 	return &cmsUser, nil
 }
 
-func GetCMSUserByMobile(mobile string) (*model.WechatMallCMSUserDO, error) {
+func (*cmsUserDao) GetByMobile(mobile string) (*model.WechatMallCMSUserDO, error) {
 	sql := "SELECT " + cmsUserColumnList + " FROM wechat_mall_cms_user WHERE is_del = 0 AND mobile = '" + mobile + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -48,7 +52,7 @@ func GetCMSUserByMobile(mobile string) (*model.WechatMallCMSUserDO, error) {
 	return &cmsUser, nil
 }
 
-func GetCMSUserByEmail(email string) (*model.WechatMallCMSUserDO, error) {
+func (*cmsUserDao) GetByEmail(email string) (*model.WechatMallCMSUserDO, error) {
 	sql := "SELECT " + cmsUserColumnList + " FROM wechat_mall_cms_user WHERE is_del = 0 AND email = '" + email + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -65,7 +69,7 @@ func GetCMSUserByEmail(email string) (*model.WechatMallCMSUserDO, error) {
 	return &cmsUser, nil
 }
 
-func AddCMSUser(user *model.WechatMallCMSUserDO) error {
+func (*cmsUserDao) AddCMSUser(user *model.WechatMallCMSUserDO) error {
 	sql := "INSERT INTO wechat_mall_cms_user( " + cmsUserColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -78,7 +82,7 @@ func AddCMSUser(user *model.WechatMallCMSUserDO) error {
 	return nil
 }
 
-func CountGroupUser(groupId int) (int, error) {
+func (*cmsUserDao) CountGroupUser(groupId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_cms_user WHERE is_del = 0 AND group_id = " + strconv.Itoa(groupId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -94,7 +98,7 @@ func CountGroupUser(groupId int) (int, error) {
 	return total, err
 }
 
-func QueryCMSUser(id int) (*model.WechatMallCMSUserDO, error) {
+func (*cmsUserDao) QueryUserById(id int) (*model.WechatMallCMSUserDO, error) {
 	sql := "SELECT " + cmsUserColumnList + " FROM wechat_mall_cms_user WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -111,7 +115,7 @@ func QueryCMSUser(id int) (*model.WechatMallCMSUserDO, error) {
 	return &userDO, nil
 }
 
-func UpdateCMSUserById(userDO *model.WechatMallCMSUserDO) error {
+func (*cmsUserDao) UpdateUserById(userDO *model.WechatMallCMSUserDO) error {
 	sql := `
 UPDATE wechat_mall_cms_user
 SET username = ?, password = ?, email = ?, mobile = ?, avatar = ?, group_id = ?, is_del = ?, update_time = ?
@@ -126,7 +130,7 @@ WHERE id = ?
 	return err
 }
 
-func ListCMSUser(page, size int) (*[]model.WechatMallCMSUserDO, error) {
+func (*cmsUserDao) ListCMSUser(page, size int) (*[]model.WechatMallCMSUserDO, error) {
 	sql := "SELECT " + cmsUserColumnList + " FROM wechat_mall_cms_user WHERE is_del = 0 AND id != 1"
 	if page > 0 && size > 0 {
 		sql += " LIMIT " + strconv.Itoa((page-1)*size) + ", " + strconv.Itoa(size)
@@ -148,7 +152,7 @@ func ListCMSUser(page, size int) (*[]model.WechatMallCMSUserDO, error) {
 	return &userList, nil
 }
 
-func CountCMSUser() (int, error) {
+func (*cmsUserDao) CountCMSUser() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_cms_user WHERE is_del = 0 AND id != 1"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -164,7 +168,7 @@ func CountCMSUser() (int, error) {
 	return total, nil
 }
 
-func AddUserGroup(group *model.WechatMallUserGroupDO) (int64, error) {
+func (*cmsUserDao) AddUserGroup(group *model.WechatMallUserGroupDO) (int64, error) {
 	sql := "INSERT INTO wechat_mall_user_group ( " + cmsUserGroupColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -177,7 +181,7 @@ func AddUserGroup(group *model.WechatMallUserGroupDO) (int64, error) {
 	return result.LastInsertId()
 }
 
-func QueryUserGroupById(id int) (*model.WechatMallUserGroupDO, error) {
+func (*cmsUserDao) QueryUserGroupById(id int) (*model.WechatMallUserGroupDO, error) {
 	sql := "SELECT " + cmsUserGroupColumnList + " FROM wechat_mall_user_group WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -193,7 +197,7 @@ func QueryUserGroupById(id int) (*model.WechatMallUserGroupDO, error) {
 	return &groupDO, nil
 }
 
-func QueryUserGroupByName(name string) (*model.WechatMallUserGroupDO, error) {
+func (*cmsUserDao) QueryUserGroupByName(name string) (*model.WechatMallUserGroupDO, error) {
 	sql := "SELECT " + cmsUserGroupColumnList + " FROM wechat_mall_user_group WHERE is_del = 0 AND name = '" + name + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -209,7 +213,7 @@ func QueryUserGroupByName(name string) (*model.WechatMallUserGroupDO, error) {
 	return &groupDO, nil
 }
 
-func QueryGroupList(page, size int) (*[]model.WechatMallUserGroupDO, error) {
+func (*cmsUserDao) QueryGroupList(page, size int) (*[]model.WechatMallUserGroupDO, error) {
 	sql := "SELECT " + cmsUserGroupColumnList + " FROM wechat_mall_user_group WHERE is_del = 0"
 	if page > 0 && size > 0 {
 		sql += " LIMIT " + strconv.Itoa((page-1)*size) + ", " + strconv.Itoa(size)
@@ -230,7 +234,7 @@ func QueryGroupList(page, size int) (*[]model.WechatMallUserGroupDO, error) {
 	return &groupList, nil
 }
 
-func CountUserCoupon() (int, error) {
+func (*cmsUserDao) CountUserCoupon() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_user_group WHERE is_del = 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -246,7 +250,7 @@ func CountUserCoupon() (int, error) {
 	return total, nil
 }
 
-func UpdateGroupById(group *model.WechatMallUserGroupDO) error {
+func (*cmsUserDao) UpdateGroupById(group *model.WechatMallUserGroupDO) error {
 	sql := `
 UPDATE wechat_mall_user_group
 SET name = ?, description = ?, is_del = ?, update_time = ?

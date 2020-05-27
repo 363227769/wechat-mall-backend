@@ -21,11 +21,11 @@ func NewBannerService() IBannerService {
 }
 
 func (bs *bannerService) GetBannerList(status, page, size int) (*[]model.WechatMallBannerDO, int) {
-	bannerList, err := dbops.QueryBannerList(status, page, size)
+	bannerList, err := dbops.BannerDao.List(status, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountBanner(status)
+	total, err := dbops.BannerDao.CountByStatus(status)
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +33,7 @@ func (bs *bannerService) GetBannerList(status, page, size int) (*[]model.WechatM
 }
 
 func (bs *bannerService) GetBannerById(id int) *model.WechatMallBannerDO {
-	banner, err := dbops.QueryBannerById(id)
+	banner, err := dbops.BannerDao.QueryBanner(id)
 	if err != nil {
 		panic(err)
 	}
@@ -41,14 +41,14 @@ func (bs *bannerService) GetBannerById(id int) *model.WechatMallBannerDO {
 }
 
 func (bs *bannerService) AddBanner(banner *model.WechatMallBannerDO) {
-	_, err := dbops.InsertBanner(banner)
+	_, err := dbops.BannerDao.Insert(banner)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (bs *bannerService) UpdateBannerById(banner *model.WechatMallBannerDO) {
-	err := dbops.UpdateBannerById(banner)
+	err := dbops.BannerDao.Update(banner)
 	if err != nil {
 		panic(err)
 	}

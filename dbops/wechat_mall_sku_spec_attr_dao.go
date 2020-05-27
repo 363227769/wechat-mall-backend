@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type skuSpecAttrDao struct{}
+
+var SkuSpecAttrDao = new(skuSpecAttrDao)
+
 const skuSpecAttrColumnList = `
 id, sku_id, spec_id, attr_id, is_del, create_time, update_time
 `
 
-func InsertSkuSpecAttr(skuSpecAttrDO *model.WechatMallSkuSpecAttrDO) error {
+func (*skuSpecAttrDao) Insert(skuSpecAttrDO *model.WechatMallSkuSpecAttrDO) error {
 	sql := "INSERT INTO wechat_mall_sku_spec_attr (" + skuSpecAttrColumnList[4:] + ") VALUES (?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -20,13 +24,13 @@ func InsertSkuSpecAttr(skuSpecAttrDO *model.WechatMallSkuSpecAttrDO) error {
 	return err
 }
 
-func RemoveRelatedBySkuId(skuId int) error {
+func (*skuSpecAttrDao) RemoveBySkuId(skuId int) error {
 	sql := "UPDATE wechat_mall_sku_spec_attr SET update_time = now(), is_del = 1 WHERE sku_id = " + strconv.Itoa(skuId)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
-func CountRelatedByAttrId(attrId int) (int, error) {
+func (*skuSpecAttrDao) CountRelatedByAttrId(attrId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_sku_spec_attr WHERE is_del = 0 AND attr_id = " + strconv.Itoa(attrId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

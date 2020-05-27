@@ -27,11 +27,11 @@ func NewSKUService() ISKUService {
 }
 
 func (s *sKUService) GetSKUList(title string, goodsId, online, page, size int) (*[]model.WechatMallSkuDO, int) {
-	skuList, err := dbops.GetSKUList(title, goodsId, online, page, size)
+	skuList, err := dbops.SkuDao.GetSKUList(title, goodsId, online, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountSKU(title, goodsId, online)
+	total, err := dbops.SkuDao.CountSKU(title, goodsId, online)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func (s *sKUService) GetSKUList(title string, goodsId, online, page, size int) (
 }
 
 func (s *sKUService) GetSKUById(id int) *model.WechatMallSkuDO {
-	sku, err := dbops.GetSKUById(id)
+	sku, err := dbops.SkuDao.GetById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func (s *sKUService) GetSKUById(id int) *model.WechatMallSkuDO {
 }
 
 func (s *sKUService) GetSKUByCode(code string) *model.WechatMallSkuDO {
-	sku, err := dbops.GetSKUByCode(code)
+	sku, err := dbops.SkuDao.GetByCode(code)
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +55,7 @@ func (s *sKUService) GetSKUByCode(code string) *model.WechatMallSkuDO {
 }
 
 func (s *sKUService) AddSKU(sku *model.WechatMallSkuDO) {
-	skuId, err := dbops.AddSKU(sku)
+	skuId, err := dbops.SkuDao.Insert(sku)
 	if err != nil {
 		panic(err)
 	}
@@ -63,12 +63,12 @@ func (s *sKUService) AddSKU(sku *model.WechatMallSkuDO) {
 }
 
 func (s *sKUService) UpdateSKUById(sku *model.WechatMallSkuDO) {
-	err := dbops.UpdateSKUById(sku)
+	err := dbops.SkuDao.UpdateById(sku)
 	if err != nil {
 		panic(err)
 	}
 	if sku.Del == 1 {
-		err = dbops.RemoveRelatedBySkuId(sku.Id)
+		err = dbops.SkuSpecAttrDao.RemoveBySkuId(sku.Id)
 		if err != nil {
 			panic(err)
 		}
@@ -79,7 +79,7 @@ func (s *sKUService) UpdateSKUById(sku *model.WechatMallSkuDO) {
 
 // 同步-关联SKU属性
 func syncSkuSpecAttrRecord(skuId int, specs string) {
-	err := dbops.RemoveRelatedBySkuId(skuId)
+	err := dbops.SkuSpecAttrDao.RemoveBySkuId(skuId)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +93,7 @@ func syncSkuSpecAttrRecord(skuId int, specs string) {
 		attrDO.SkuId = model.ID(skuId)
 		attrDO.SpecId = v.KeyId
 		attrDO.AttrId = v.ValueId
-		err := dbops.InsertSkuSpecAttr(&attrDO)
+		err := dbops.SkuSpecAttrDao.Insert(&attrDO)
 		if err != nil {
 			panic(err)
 		}
@@ -102,7 +102,7 @@ func syncSkuSpecAttrRecord(skuId int, specs string) {
 
 // 统计-售罄的SKU数量
 func (s *sKUService) CountSellOutSKU() int {
-	total, err := dbops.CountSellOutSKUList()
+	total, err := dbops.SkuDao.CountSellOutSKUList()
 	if err != nil {
 		panic(err)
 	}
@@ -111,11 +111,11 @@ func (s *sKUService) CountSellOutSKU() int {
 
 // 查询-售罄的商品
 func (s *sKUService) QuerySellOutSKU(page, size int) (*[]model.WechatMallSkuDO, int) {
-	skuList, err := dbops.QuerySellOutSKUList(page, size)
+	skuList, err := dbops.SkuDao.QuerySellOutSKUList(page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountSellOutSKUList()
+	total, err := dbops.SkuDao.CountSellOutSKUList()
 	if err != nil {
 		panic(err)
 	}
@@ -123,7 +123,7 @@ func (s *sKUService) QuerySellOutSKU(page, size int) (*[]model.WechatMallSkuDO, 
 }
 
 func (s *sKUService) CountAttrRelatedSku(attrId int) int {
-	total, err := dbops.CountRelatedByAttrId(attrId)
+	total, err := dbops.SkuSpecAttrDao.CountRelatedByAttrId(attrId)
 	if err != nil {
 		panic(err)
 	}

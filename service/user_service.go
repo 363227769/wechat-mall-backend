@@ -63,13 +63,13 @@ func (s *UserService) LoginCodeAuth(code string) (string, int) {
 }
 
 func registerUser(openid string) int {
-	user, err := dbops.GetUserByOpenid(openid)
+	user, err := dbops.UserDao.GetByOpenid(openid)
 	if err != nil {
 		panic(err)
 	}
 	if user.Id == 0 {
 		user = &model.WechatMallUserDO{Openid: openid}
-		uid, err := dbops.AddMiniappUser(user)
+		uid, err := dbops.UserDao.Insert(user)
 		if err != nil {
 			panic(err)
 		}
@@ -85,7 +85,7 @@ func (s *UserService) DoWxUserPhoneSignature(userId int, sessionKey, encryptedDa
 	if err != nil {
 		panic(err)
 	}
-	userDO, err := dbops.GetUserById(userId)
+	userDO, err := dbops.UserDao.GetById(userId)
 	if err != nil {
 		panic(err)
 	}
@@ -93,14 +93,14 @@ func (s *UserService) DoWxUserPhoneSignature(userId int, sessionKey, encryptedDa
 		panic(errs.ErrorMiniappUser)
 	}
 	userDO.Mobile = decrypt["phoneNumber"].(string)
-	err = dbops.UpdateUserById(userDO)
+	err = dbops.UserDao.UpdateById(userDO)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *UserService) DoUserAuthInfo(userId int, req defs.WxappAuthUserInfoReq) {
-	userDO, err := dbops.GetUserById(userId)
+	userDO, err := dbops.UserDao.GetById(userId)
 	if err != nil {
 		panic(err)
 	}
@@ -113,14 +113,14 @@ func (s *UserService) DoUserAuthInfo(userId int, req defs.WxappAuthUserInfoReq) 
 	userDO.Country = req.Country
 	userDO.Province = req.Province
 	userDO.City = req.City
-	err = dbops.UpdateUserById(userDO)
+	err = dbops.UserDao.UpdateById(userDO)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *UserService) DoAddVisitorRecord(userId int, ip string) {
-	err := dbops.AddVisitorRecord(userId, ip)
+	err := dbops.VisitorRecordDao.Insert(userId, ip)
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ func (s *UserService) QueryTodayUniqueVisitor() int {
 	today, _ := utils.ParseDatetime(todayStr, utils.YYYYMMDD)
 	startTime := time.Unix(today.Unix()-28800, 0)
 	endTime := time.Unix(today.Unix()+57600, 0)
-	total, err := dbops.CountUniqueVisitor(startTime, endTime)
+	total, err := dbops.VisitorRecordDao.Count(startTime, endTime)
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +140,7 @@ func (s *UserService) QueryTodayUniqueVisitor() int {
 }
 
 func (s *UserService) QueryUserInfo(userId int) *model.WechatMallUserDO {
-	userDO, err := dbops.GetUserById(userId)
+	userDO, err := dbops.UserDao.GetById(userId)
 	if err != nil {
 		panic(err)
 	}

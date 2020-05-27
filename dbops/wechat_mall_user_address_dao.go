@@ -6,12 +6,16 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type userAddressDao struct{}
+
+var UserAddressDao = new(userAddressDao)
+
 const userAddressColumnList = `
 id, user_id, contacts, mobile, province_id, city_id, area_id, province_str, city_str, area_str, address, is_default, 
 is_del, create_time, update_time
 `
 
-func AddUserAddress(address *model.WechatMallUserAddressDO) error {
+func (*userAddressDao) Insert(address *model.WechatMallUserAddressDO) error {
 	sql := "INSERT INTO wechat_mall_user_address ( " + userAddressColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -23,7 +27,7 @@ func AddUserAddress(address *model.WechatMallUserAddressDO) error {
 	return err
 }
 
-func ListUserAddress(userId, page, size int) (*[]model.WechatMallUserAddressDO, error) {
+func (*userAddressDao) ListByUserId(userId, page, size int) (*[]model.WechatMallUserAddressDO, error) {
 	sql := "SELECT " + userAddressColumnList + " FROM wechat_mall_user_address WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	if page > 0 && size > 0 {
 		sql += " ORDER BY update_time DESC LIMIT " + strconv.Itoa((page-1)*page) + " , " + strconv.Itoa(size)
@@ -46,7 +50,7 @@ func ListUserAddress(userId, page, size int) (*[]model.WechatMallUserAddressDO, 
 	return &addressList, nil
 }
 
-func CountUserAddress(userId int) (int, error) {
+func (*userAddressDao) CountByUserId(userId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_user_address WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -62,7 +66,7 @@ func CountUserAddress(userId int) (int, error) {
 	return total, nil
 }
 
-func QueryUserAddressById(id int) (*model.WechatMallUserAddressDO, error) {
+func (*userAddressDao) QueryById(id int) (*model.WechatMallUserAddressDO, error) {
 	sql := "SELECT " + userAddressColumnList + " FROM wechat_mall_user_address WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -80,7 +84,7 @@ func QueryUserAddressById(id int) (*model.WechatMallUserAddressDO, error) {
 	return &address, nil
 }
 
-func UpdateUserAddress(address *model.WechatMallUserAddressDO) error {
+func (*userAddressDao) Update(address *model.WechatMallUserAddressDO) error {
 	sql := `
 UPDATE wechat_mall_user_address
 SET user_id = ?, contacts = ?, mobile = ?, province_id = ?, city_id = ?, area_id = ?, province_str = ?, 
@@ -97,7 +101,7 @@ WHERE id = ?
 	return err
 }
 
-func QueryDefaultAddress(userId int) (*model.WechatMallUserAddressDO, error) {
+func (*userAddressDao) QueryDefaultAddress(userId int) (*model.WechatMallUserAddressDO, error) {
 	sql := "SELECT " + userAddressColumnList + " FROM wechat_mall_user_address WHERE is_del = 0 AND is_default = 1 AND user_id = " + strconv.Itoa(userId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

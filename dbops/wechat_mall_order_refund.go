@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type orderRefundDao struct{}
+
+var OrderRefundDao = new(orderRefundDao)
+
 const refundColumnList = `
 id, refund_no, user_id, order_no, reason, refund_amount, status, is_del, refund_time, create_time, update_time
 `
 
-func AddRefundRecord(record *model.WechatMallOrderRefund) error {
+func (*orderRefundDao) Insert(record *model.WechatMallOrderRefund) error {
 	sql := "INSERT INTO wechat_mall_order_refund (" + refundColumnList[4:] + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -21,7 +25,7 @@ func AddRefundRecord(record *model.WechatMallOrderRefund) error {
 }
 
 // 查询退款单
-func QueryRefundRecord(refundNo string) (*model.WechatMallOrderRefund, error) {
+func (*orderRefundDao) QueryByRefundNo(refundNo string) (*model.WechatMallOrderRefund, error) {
 	sql := "SELECT " + refundColumnList + " FROM wechat_mall_order_refund WHERE refund_no = '" + refundNo + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -38,7 +42,7 @@ func QueryRefundRecord(refundNo string) (*model.WechatMallOrderRefund, error) {
 }
 
 // 订单退款记录
-func QueryOrderRefundRecord(orderNo string) (*model.WechatMallOrderRefund, error) {
+func (*orderRefundDao) QueryByOrderNo(orderNo string) (*model.WechatMallOrderRefund, error) {
 	sql := "SELECT " + refundColumnList + " FROM wechat_mall_order_refund WHERE order_no = '" + orderNo + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -54,13 +58,13 @@ func QueryOrderRefundRecord(orderNo string) (*model.WechatMallOrderRefund, error
 	return &record, nil
 }
 
-func UpdateRefundApply(id int, status int) error {
+func (*orderRefundDao) Update(id int, status int) error {
 	sql := "UPDATE wechat_mall_order_refund SET status = " + strconv.Itoa(status) + ", refund_time = now(), update_time = now() WHERE status = 0 AND id = " + strconv.Itoa(id)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
-func CountPendingOrderRefund() (int, error) {
+func (*orderRefundDao) CountPendingOrderRefund() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_order_refund WHERE status IN (0, 1)"
 	rows, err := dbConn.Query(sql)
 	if err != nil {

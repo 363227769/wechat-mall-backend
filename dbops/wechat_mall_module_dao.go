@@ -6,6 +6,10 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type moduleDao struct{}
+
+var ModuleDao = new(moduleDao)
+
 const (
 	moduleColumnList = `
 id, name, description, is_del, create_time, update_time
@@ -18,7 +22,7 @@ id, group_id, page_id, is_del, create_time, update_time
 `
 )
 
-func QueryModuleList() (*[]model.WechatMallModuleDO, error) {
+func (*moduleDao) QueryModuleList() (*[]model.WechatMallModuleDO, error) {
 	sql := "SELECT " + moduleColumnList + " FROM wechat_mall_module WHERE is_del = 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -36,7 +40,7 @@ func QueryModuleList() (*[]model.WechatMallModuleDO, error) {
 	return &moduleList, nil
 }
 
-func QueryModuleById(moduleId int) (*model.WechatMallModuleDO, error) {
+func (*moduleDao) QueryModuleById(moduleId int) (*model.WechatMallModuleDO, error) {
 	sql := "SELECT " + moduleColumnList + " FROM wechat_mall_module WHERE id = " + strconv.Itoa(moduleId)
 	rows, e := dbConn.Query(sql)
 	if e != nil {
@@ -52,7 +56,7 @@ func QueryModuleById(moduleId int) (*model.WechatMallModuleDO, error) {
 	return &moduleDO, nil
 }
 
-func ListModulePage(moduleId int) (*[]model.WechatMallModulePageDO, error) {
+func (*moduleDao) ListModulePage(moduleId int) (*[]model.WechatMallModulePageDO, error) {
 	sql := "SELECT " + modulePageColumnList + " FROM wechat_mall_module_page WHERE is_del = 0 AND module_id = " + strconv.Itoa(moduleId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -70,7 +74,7 @@ func ListModulePage(moduleId int) (*[]model.WechatMallModulePageDO, error) {
 	return &pageList, nil
 }
 
-func QueryModulePageById(pageId int) (*model.WechatMallModulePageDO, error) {
+func (*moduleDao) QueryModulePageById(pageId int) (*model.WechatMallModulePageDO, error) {
 	sql := "SELECT " + modulePageColumnList + " FROM wechat_mall_module_page WHERE id = " + strconv.Itoa(pageId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -86,7 +90,7 @@ func QueryModulePageById(pageId int) (*model.WechatMallModulePageDO, error) {
 	return &pageDO, nil
 }
 
-func ListGroupPagePermission(groupId int) (*[]model.WechatMallGroupPagePermission, error) {
+func (*moduleDao) ListGroupPagePermission(groupId int) (*[]model.WechatMallGroupPagePermission, error) {
 	sql := "SELECT " + pagePermissionColumnList + " FROM wechat_mall_group_page_permission WHERE is_del = 0 AND group_id = " + strconv.Itoa(groupId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -104,7 +108,7 @@ func ListGroupPagePermission(groupId int) (*[]model.WechatMallGroupPagePermissio
 	return &auths, nil
 }
 
-func AddGroupPagePermission(pageId, groupId int) error {
+func (*moduleDao) AddGroupPagePermission(pageId, groupId int) error {
 	sql := "INSERT INTO wechat_mall_group_page_permission ( " + pagePermissionColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -114,7 +118,7 @@ func AddGroupPagePermission(pageId, groupId int) error {
 	return err
 }
 
-func RemoveGroupAllPagePermission(groupId int) error {
+func (*moduleDao) RemoveGroupAllPagePermission(groupId int) error {
 	sql := "UPDATE wechat_mall_group_page_permission SET update_time = now(), is_del = 1 WHERE group_id = " + strconv.Itoa(groupId)
 	_, err := dbConn.Exec(sql)
 	return err

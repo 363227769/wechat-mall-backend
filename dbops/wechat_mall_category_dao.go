@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type categoryDao struct{}
+
+var CategoryDao = new(categoryDao)
+
 const categoryColumnList = `
 id, parent_id, name, sort, online, picture, description, is_del, create_time, update_time
 `
 
-func QueryCategoryList(pid, page, size int) (*[]model.WechatMallCategoryDO, error) {
+func (*categoryDao) List(pid, page, size int) (*[]model.WechatMallCategoryDO, error) {
 	sql := "SELECT " + categoryColumnList + " FROM wechat_mall_category WHERE is_del = 0 AND parent_id = " + strconv.Itoa(pid) + " ORDER BY sort"
 	if page > 0 && size > 0 {
 		sql += " LIMIT " + strconv.Itoa((page-1)*size) + ", " + strconv.Itoa(size)
@@ -31,7 +35,7 @@ func QueryCategoryList(pid, page, size int) (*[]model.WechatMallCategoryDO, erro
 	return &cateList, nil
 }
 
-func CountCategory(pid int) (int, error) {
+func (*categoryDao) CountByPid(pid int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_category WHERE is_del = 0 AND parent_id = " + strconv.Itoa(pid)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -47,7 +51,7 @@ func CountCategory(pid int) (int, error) {
 	return total, nil
 }
 
-func QueryCategoryById(id int) (*model.WechatMallCategoryDO, error) {
+func (*categoryDao) QueryById(id int) (*model.WechatMallCategoryDO, error) {
 	sql := "SELECT " + categoryColumnList + " FROM wechat_mall_category WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -63,7 +67,7 @@ func QueryCategoryById(id int) (*model.WechatMallCategoryDO, error) {
 	return &category, nil
 }
 
-func QueryCategoryByName(name string) (*model.WechatMallCategoryDO, error) {
+func (*categoryDao) QueryByName(name string) (*model.WechatMallCategoryDO, error) {
 	sql := "SELECT " + categoryColumnList + " FROM wechat_mall_category WHERE is_del = 0 AND name = '" + name + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -79,7 +83,7 @@ func QueryCategoryByName(name string) (*model.WechatMallCategoryDO, error) {
 	return &category, nil
 }
 
-func InsertCategory(category *model.WechatMallCategoryDO) error {
+func (*categoryDao) Insert(category *model.WechatMallCategoryDO) error {
 	sql := "INSERT INTO wechat_mall_category ( " + categoryColumnList[4:] + " ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -92,7 +96,7 @@ func InsertCategory(category *model.WechatMallCategoryDO) error {
 	return nil
 }
 
-func UpdateCategoryById(category *model.WechatMallCategoryDO) error {
+func (*categoryDao) Update(category *model.WechatMallCategoryDO) error {
 	sql := `
 UPDATE wechat_mall_category
 SET parent_id = ?, name = ?, sort = ?, online = ?, picture = ?, description = ?, is_del = ?, update_time = ? 
@@ -109,7 +113,7 @@ WHERE id = ?
 	return nil
 }
 
-func QuerySubCategoryByParentId(categoryId int) (*[]int, error) {
+func (*categoryDao) QuerySubCategoryByParentId(categoryId int) (*[]int, error) {
 	sql := "SELECT id FROM wechat_mall_category WHERE is_del = 0 AND parent_id = " + strconv.Itoa(categoryId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -127,14 +131,14 @@ func QuerySubCategoryByParentId(categoryId int) (*[]int, error) {
 	return &ids, nil
 }
 
-func UpdateSubCategoryOnline(categoryId, online int) error {
+func (*categoryDao) UpdateSubCategoryOnline(categoryId, online int) error {
 	sql := "UPDATE wechat_mall_category SET update_time = now(), online = " + strconv.Itoa(online) + " WHERE is_del = 0 AND parent_id = " + strconv.Itoa(categoryId)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
 // 查询-所有二级分类
-func QueryAllSubCategory() (*[]model.WechatMallCategoryDO, error) {
+func (*categoryDao) QueryAllSubCategory() (*[]model.WechatMallCategoryDO, error) {
 	sql := "SELECT " + categoryColumnList + " FROM wechat_mall_category WHERE is_del = 0 AND online = 1 AND parent_id != 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {

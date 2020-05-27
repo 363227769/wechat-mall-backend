@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type userDao struct{}
+
+var UserDao = new(userDao)
+
 const userColumnList = `
 id, openid, nickname, avatar, mobile, city, province, country, gender, create_time, update_time
 `
 
-func GetUserByOpenid(openid string) (*model.WechatMallUserDO, error) {
+func (*userDao) GetByOpenid(openid string) (*model.WechatMallUserDO, error) {
 	sql := "SELECT " + userColumnList + " FROM wechat_mall_user WHERE openid = '" + openid + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -27,7 +31,7 @@ func GetUserByOpenid(openid string) (*model.WechatMallUserDO, error) {
 	return &user, nil
 }
 
-func GetUserById(id int) (*model.WechatMallUserDO, error) {
+func (*userDao) GetById(id int) (*model.WechatMallUserDO, error) {
 	sql := "SELECT " + userColumnList + " FROM wechat_mall_user WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -44,7 +48,7 @@ func GetUserById(id int) (*model.WechatMallUserDO, error) {
 	return &user, nil
 }
 
-func AddMiniappUser(user *model.WechatMallUserDO) (int64, error) {
+func (*userDao) Insert(user *model.WechatMallUserDO) (int64, error) {
 	sql := "INSERT INTO wechat_mall_user(" + userColumnList[4:] + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -58,7 +62,7 @@ func AddMiniappUser(user *model.WechatMallUserDO) (int64, error) {
 	return result.LastInsertId()
 }
 
-func UpdateUserById(user *model.WechatMallUserDO) error {
+func (*userDao) UpdateById(user *model.WechatMallUserDO) error {
 	sql := `
 UPDATE wechat_mall_user
 SET nickname = ?, avatar = ?, mobile = ?, city = ?, province = ?, country = ?, gender = ?, update_time = ?

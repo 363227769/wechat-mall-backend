@@ -2,11 +2,15 @@ package dbops
 
 import "time"
 
+type visitorRecordDao struct{}
+
+var VisitorRecordDao = new(visitorRecordDao)
+
 const visitorColumnList = `
 id, user_id, ip, create_time, update_time
 `
 
-func AddVisitorRecord(userId int, ip string) error {
+func (*visitorRecordDao) Insert(userId int, ip string) error {
 	sql := "INSERT INTO wechat_mall_visitor_record (" + visitorColumnList[4:] + ") VALUES (?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -16,7 +20,7 @@ func AddVisitorRecord(userId int, ip string) error {
 	return err
 }
 
-func CountUniqueVisitor(startTime, endTime time.Time) (int, error) {
+func (*visitorRecordDao) Count(startTime, endTime time.Time) (int, error) {
 	sql := "SELECT COUNT(DISTINCT(user_id)) FROM wechat_mall_visitor_record WHERE create_time BETWEEN ? AND ?"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {

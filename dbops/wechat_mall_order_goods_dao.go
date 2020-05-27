@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type orderGoodsDao struct{}
+
+var OrderGoodsDao = new(orderGoodsDao)
+
 const orderGoodsColumnList = `
 id, order_no, user_id, goods_id, sku_id, picture, title, price, specs, num, lock_status, create_time, update_time
 `
 
-func QueryOrderGoods(orderNo string) (*[]model.WechatMallOrderGoodsDO, error) {
+func (*orderGoodsDao) List(orderNo string) (*[]model.WechatMallOrderGoodsDO, error) {
 	sql := "SELECT " + orderGoodsColumnList + " FROM wechat_mall_order_goods WHERE order_no = '" + orderNo + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -29,7 +33,7 @@ func QueryOrderGoods(orderNo string) (*[]model.WechatMallOrderGoodsDO, error) {
 	return &goodsList, nil
 }
 
-func AddOrderGoods(goods *model.WechatMallOrderGoodsDO) error {
+func (*orderGoodsDao) Insert(goods *model.WechatMallOrderGoodsDO) error {
 	sql := "INSERT INTO wechat_mall_order_goods (" + orderGoodsColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -40,7 +44,7 @@ func AddOrderGoods(goods *model.WechatMallOrderGoodsDO) error {
 	return err
 }
 
-func UpdateOrderGoods(goods *model.WechatMallOrderGoodsDO) error {
+func (*orderGoodsDao) Update(goods *model.WechatMallOrderGoodsDO) error {
 	sql := "UPDATE wechat_mall_order_goods SET update_time = now()"
 	if goods.Price != "" {
 		sql += ", price = '" + goods.Price + "'"
@@ -53,7 +57,7 @@ func UpdateOrderGoods(goods *model.WechatMallOrderGoodsDO) error {
 }
 
 // 商品-统计购买人数
-func CountBuyGoodsUserNum(goodsId int) (int, error) {
+func (*orderGoodsDao) CountBuyUserNum(goodsId int) (int, error) {
 	sql := "SELECT COUNT(DISTINCT(user_id)) FROM wechat_mall_order_goods WHERE lock_status = 1 AND goods_id = " + strconv.Itoa(goodsId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

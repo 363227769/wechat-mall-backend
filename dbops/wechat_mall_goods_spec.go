@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type goodsSpec struct{}
+
+var GoodsSpec = new(goodsSpec)
+
 const goodsSpecColumnList = `
 id, goods_id, spec_id, is_del, create_time, update_time
 `
 
-func GetGoodsSpecList(goodsId int) (*[]model.WechatMallGoodsSpecDO, error) {
+func (*goodsSpec) ListByGoodsId(goodsId int) (*[]model.WechatMallGoodsSpecDO, error) {
 	sql := "SELECT " + goodsSpecColumnList + " FROM wechat_mall_goods_spec WHERE is_del = 0 AND goods_id = " + strconv.Itoa(goodsId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -29,7 +33,7 @@ func GetGoodsSpecList(goodsId int) (*[]model.WechatMallGoodsSpecDO, error) {
 	return &goodsSpecList, nil
 }
 
-func CountGoodsSpecBySpecId(specId int) (int, error) {
+func (*goodsSpec) CountBySpecId(specId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_goods_spec WHERE is_del = 0 AND spec_id = " + strconv.Itoa(specId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -45,7 +49,7 @@ func CountGoodsSpecBySpecId(specId int) (int, error) {
 	return total, nil
 }
 
-func DeleteGoodsSpec(goodsId int) error {
+func (*goodsSpec) DeleteByGoodsId(goodsId int) error {
 	sql := "UPDATE wechat_mall_goods_spec SET is_del = 1 WHERE goods_id = " + strconv.Itoa(goodsId)
 	_, err := dbConn.Exec(sql)
 	if err != nil {
@@ -54,7 +58,7 @@ func DeleteGoodsSpec(goodsId int) error {
 	return nil
 }
 
-func InsertGoodsSpec(goodsSpec *model.WechatMallGoodsSpecDO) error {
+func (*goodsSpec) Insert(goodsSpec *model.WechatMallGoodsSpecDO) error {
 	sql := "INSERT INTO wechat_mall_goods_spec(" + goodsSpecColumnList[4:] + ") VALUES(?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {

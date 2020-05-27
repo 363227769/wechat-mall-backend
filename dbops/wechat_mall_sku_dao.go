@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type skuDao struct{}
+
+var SkuDao = new(skuDao)
+
 const skuColumnList = `
 id, title, price, code, stock, goods_id, online, picture, specs, is_del, create_time, update_time
 `
 
-func GetSKUList(title string, goodsId, online, page, size int) (*[]model.WechatMallSkuDO, error) {
+func (*skuDao) GetSKUList(title string, goodsId, online, page, size int) (*[]model.WechatMallSkuDO, error) {
 	sql := "SELECT " + skuColumnList + " FROM wechat_mall_sku WHERE is_del = 0"
 	if goodsId != 0 {
 		sql += " AND goods_id = " + strconv.Itoa(goodsId)
@@ -41,7 +45,7 @@ func GetSKUList(title string, goodsId, online, page, size int) (*[]model.WechatM
 	return &skuList, nil
 }
 
-func CountSKU(title string, goodsId, online int) (int, error) {
+func (*skuDao) CountSKU(title string, goodsId, online int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_sku WHERE is_del = 0"
 	if goodsId != 0 {
 		sql += " AND goods_id = " + strconv.Itoa(goodsId)
@@ -66,7 +70,7 @@ func CountSKU(title string, goodsId, online int) (int, error) {
 	return total, nil
 }
 
-func AddSKU(sku *model.WechatMallSkuDO) (int64, error) {
+func (*skuDao) Insert(sku *model.WechatMallSkuDO) (int64, error) {
 	sql := "INSERT INTO wechat_mall_sku( " + skuColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -79,7 +83,7 @@ func AddSKU(sku *model.WechatMallSkuDO) (int64, error) {
 	return result.LastInsertId()
 }
 
-func GetSKUById(id int) (*model.WechatMallSkuDO, error) {
+func (*skuDao) GetById(id int) (*model.WechatMallSkuDO, error) {
 	sql := "SELECT " + skuColumnList + " FROM wechat_mall_sku WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -96,7 +100,7 @@ func GetSKUById(id int) (*model.WechatMallSkuDO, error) {
 	return &sku, nil
 }
 
-func GetSKUByCode(code string) (*model.WechatMallSkuDO, error) {
+func (*skuDao) GetByCode(code string) (*model.WechatMallSkuDO, error) {
 	sql := "SELECT " + skuColumnList + " FROM wechat_mall_sku WHERE is_del = 0 AND code = '" + code + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -113,7 +117,7 @@ func GetSKUByCode(code string) (*model.WechatMallSkuDO, error) {
 	return &sku, nil
 }
 
-func UpdateSKUById(sku *model.WechatMallSkuDO) error {
+func (*skuDao) UpdateById(sku *model.WechatMallSkuDO) error {
 	sql := `
 UPDATE wechat_mall_sku
 SET title = ?, price = ?, code = ?, stock = ?, goods_id = ?, online = ?, picture = ?, specs = ?, is_del = ?, update_time = ?
@@ -130,14 +134,14 @@ WHERE id = ?
 	return nil
 }
 
-func UpdateSkuStockById(id, num int) error {
+func (*skuDao) UpdateSkuStockById(id, num int) error {
 	sql := "UPDATE wechat_mall_sku SET update_time = now(), stock = stock - " + strconv.Itoa(num) + " WHERE id = " + strconv.Itoa(id)
 	sql += " AND stock >= " + strconv.Itoa(num)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
-func QuerySellOutSKUList(page, size int) (*[]model.WechatMallSkuDO, error) {
+func (*skuDao) QuerySellOutSKUList(page, size int) (*[]model.WechatMallSkuDO, error) {
 	sql := "SELECT " + skuColumnList + " FROM wechat_mall_sku WHERE is_del = 0 AND stock = 0"
 	if page > 0 && size > 0 {
 		sql += " LIMIT " + strconv.Itoa(page) + ", " + strconv.Itoa(size)
@@ -159,7 +163,7 @@ func QuerySellOutSKUList(page, size int) (*[]model.WechatMallSkuDO, error) {
 	return &skuList, nil
 }
 
-func CountSellOutSKUList() (int, error) {
+func (*skuDao) CountSellOutSKUList() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_sku WHERE is_del = 0 AND stock = 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {

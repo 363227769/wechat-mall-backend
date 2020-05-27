@@ -29,7 +29,7 @@ func (h *Handler) GetGoodsList(w http.ResponseWriter, r *http.Request) {
 	goodsList, total := h.service.GoodsService.GetGoodsList(keyword, categoryId, online, page, size)
 	goodsVOList := []defs.CMSGoodsListVO{}
 	for _, v := range *goodsList {
-		categoryDO, err := dbops.QueryCategoryById(v.CategoryId)
+		categoryDO, err := dbops.CategoryDao.QueryById(v.CategoryId)
 		if err != nil {
 			panic(err)
 		}
@@ -57,14 +57,14 @@ func (h *Handler) GetGoodsList(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetGoods(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
-	goodsDO, err := dbops.QueryGoodsById(id)
+	goodsDO, err := dbops.GoodsDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
 	if goodsDO.Id == defs.ZERO || goodsDO.Del == defs.DELETE {
 		panic(errs.ErrorGoods)
 	}
-	categoryDO, err := dbops.QueryCategoryById(goodsDO.CategoryId)
+	categoryDO, err := dbops.CategoryDao.QueryById(goodsDO.CategoryId)
 	if err != nil {
 		panic(errs.ErrorCategory)
 	}

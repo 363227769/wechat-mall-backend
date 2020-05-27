@@ -35,7 +35,7 @@ func NewCMSUserService() ICMSUserService {
 }
 
 func (s *CMSUserService) CMSLoginValidate(username, password string) *model.WechatMallCMSUserDO {
-	user, err := dbops.GetCMSUserByUsername(username)
+	user, err := dbops.CMSUserDao.GetByUsername(username)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +50,7 @@ func (s *CMSUserService) CMSLoginValidate(username, password string) *model.Wech
 }
 
 func (s *CMSUserService) AddCMSUser(userDO *model.WechatMallCMSUserDO) {
-	cmsUserDO, err := dbops.GetCMSUserByUsername(userDO.Username)
+	cmsUserDO, err := dbops.CMSUserDao.GetByUsername(userDO.Username)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func (s *CMSUserService) AddCMSUser(userDO *model.WechatMallCMSUserDO) {
 		panic(errs.NewErrorCMSUser("用户名已注册！"))
 	}
 	if userDO.Email != "" {
-		cmsUserDO, err = dbops.GetCMSUserByEmail(userDO.Email)
+		cmsUserDO, err = dbops.CMSUserDao.GetByEmail(userDO.Email)
 		if err != nil {
 			panic(err)
 		}
@@ -67,7 +67,7 @@ func (s *CMSUserService) AddCMSUser(userDO *model.WechatMallCMSUserDO) {
 		}
 	}
 	if userDO.Mobile != "" {
-		cmsUserDO, err := dbops.GetCMSUserByMobile(userDO.Mobile)
+		cmsUserDO, err := dbops.CMSUserDao.GetByMobile(userDO.Mobile)
 		if err != nil {
 			panic(err)
 		}
@@ -75,14 +75,14 @@ func (s *CMSUserService) AddCMSUser(userDO *model.WechatMallCMSUserDO) {
 			panic(errs.NewErrorCMSUser("手机号已注册"))
 		}
 	}
-	groupDO, err := dbops.QueryUserGroupById(userDO.GroupId)
+	groupDO, err := dbops.CMSUserDao.QueryUserGroupById(userDO.GroupId)
 	if err != nil {
 		panic(err)
 	}
 	if groupDO.Id == defs.ZERO || groupDO.Del == defs.DELETE {
 		panic(errs.ErrorGroup)
 	}
-	err = dbops.AddCMSUser(userDO)
+	err = dbops.CMSUserDao.AddCMSUser(userDO)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func (s *CMSUserService) AddCMSUser(userDO *model.WechatMallCMSUserDO) {
 
 func (s *CMSUserService) UpdateCMSUser(userDO *model.WechatMallCMSUserDO) {
 	if userDO.Email != "" {
-		cmsUserDO, err := dbops.GetCMSUserByEmail(userDO.Email)
+		cmsUserDO, err := dbops.CMSUserDao.GetByEmail(userDO.Email)
 		if err != nil {
 			panic(err)
 		}
@@ -99,7 +99,7 @@ func (s *CMSUserService) UpdateCMSUser(userDO *model.WechatMallCMSUserDO) {
 		}
 	}
 	if userDO.Mobile != "" {
-		cmsUserDO, err := dbops.GetCMSUserByMobile(userDO.Mobile)
+		cmsUserDO, err := dbops.CMSUserDao.GetByMobile(userDO.Mobile)
 		if err != nil {
 			panic(err)
 		}
@@ -108,7 +108,7 @@ func (s *CMSUserService) UpdateCMSUser(userDO *model.WechatMallCMSUserDO) {
 		}
 	}
 	if userDO.GroupId != defs.ZERO {
-		groupDO, err := dbops.QueryUserGroupById(userDO.GroupId)
+		groupDO, err := dbops.CMSUserDao.QueryUserGroupById(userDO.GroupId)
 		if err != nil {
 			panic(err)
 		}
@@ -116,18 +116,18 @@ func (s *CMSUserService) UpdateCMSUser(userDO *model.WechatMallCMSUserDO) {
 			panic(errs.ErrorGroup)
 		}
 	}
-	err := dbops.UpdateCMSUserById(userDO)
+	err := dbops.CMSUserDao.UpdateUserById(userDO)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *CMSUserService) GetCMSUserList(page, size int) (*[]model.WechatMallCMSUserDO, int) {
-	userDOList, err := dbops.ListCMSUser(page, size)
+	userDOList, err := dbops.CMSUserDao.ListCMSUser(page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountCMSUser()
+	total, err := dbops.CMSUserDao.CountCMSUser()
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +135,7 @@ func (s *CMSUserService) GetCMSUserList(page, size int) (*[]model.WechatMallCMSU
 }
 
 func (s *CMSUserService) CountGroupUser(groupId int) int {
-	total, err := dbops.CountGroupUser(groupId)
+	total, err := dbops.CMSUserDao.CountGroupUser(groupId)
 	if err != nil {
 		panic(err)
 	}
@@ -143,7 +143,7 @@ func (s *CMSUserService) CountGroupUser(groupId int) int {
 }
 
 func (s *CMSUserService) GetCMSUserById(id int) *model.WechatMallCMSUserDO {
-	userDO, err := dbops.QueryCMSUser(id)
+	userDO, err := dbops.CMSUserDao.QueryUserById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -151,11 +151,11 @@ func (s *CMSUserService) GetCMSUserById(id int) *model.WechatMallCMSUserDO {
 }
 
 func (s *CMSUserService) QueryUserGroupList(page, size int) (*[]model.WechatMallUserGroupDO, int) {
-	groupList, err := dbops.QueryGroupList(page, size)
+	groupList, err := dbops.CMSUserDao.QueryGroupList(page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountUserCoupon()
+	total, err := dbops.CMSUserDao.CountUserCoupon()
 	if err != nil {
 		panic(err)
 	}
@@ -163,7 +163,7 @@ func (s *CMSUserService) QueryUserGroupList(page, size int) (*[]model.WechatMall
 }
 
 func (s *CMSUserService) QueryUserGroupById(id int) *model.WechatMallUserGroupDO {
-	groupDO, err := dbops.QueryUserGroupById(id)
+	groupDO, err := dbops.CMSUserDao.QueryUserGroupById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +171,7 @@ func (s *CMSUserService) QueryUserGroupById(id int) *model.WechatMallUserGroupDO
 }
 
 func (s *CMSUserService) QueryUserGroupByName(name string) *model.WechatMallUserGroupDO {
-	groupDO, err := dbops.QueryUserGroupByName(name)
+	groupDO, err := dbops.CMSUserDao.QueryUserGroupByName(name)
 	if err != nil {
 		panic(err)
 	}
@@ -179,7 +179,7 @@ func (s *CMSUserService) QueryUserGroupByName(name string) *model.WechatMallUser
 }
 
 func (s *CMSUserService) AddUserGroup(group *model.WechatMallUserGroupDO) int {
-	groupId, err := dbops.AddUserGroup(group)
+	groupId, err := dbops.CMSUserDao.AddUserGroup(group)
 	if err != nil {
 		panic(err)
 	}
@@ -187,20 +187,20 @@ func (s *CMSUserService) AddUserGroup(group *model.WechatMallUserGroupDO) int {
 }
 
 func (s *CMSUserService) UpdateUserGroup(group *model.WechatMallUserGroupDO) {
-	err := dbops.UpdateGroupById(group)
+	err := dbops.CMSUserDao.UpdateGroupById(group)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *CMSUserService) QueryGroupAuths(groupId int) *[]map[string][]defs.ModulePageAuth {
-	permissionList, err := dbops.ListGroupPagePermission(groupId)
+	permissionList, err := dbops.ModuleDao.ListGroupPagePermission(groupId)
 	if err != nil {
 		panic(err)
 	}
 	moduleMap := map[int][]int{}
 	for _, v := range *permissionList {
-		pageDO, err := dbops.QueryModulePageById(v.PageId)
+		pageDO, err := dbops.ModuleDao.QueryModulePageById(v.PageId)
 		if err != nil {
 			panic(err)
 		}
@@ -210,7 +210,7 @@ func (s *CMSUserService) QueryGroupAuths(groupId int) *[]map[string][]defs.Modul
 
 	auths := []map[string][]defs.ModulePageAuth{}
 	for k, v := range moduleMap {
-		moduleDO, err := dbops.QueryModuleById(k)
+		moduleDO, err := dbops.ModuleDao.QueryModuleById(k)
 		if err != nil {
 			panic(err)
 		}
@@ -219,7 +219,7 @@ func (s *CMSUserService) QueryGroupAuths(groupId int) *[]map[string][]defs.Modul
 		}
 		authArr := []defs.ModulePageAuth{}
 		for _, g := range v {
-			pageDO, err := dbops.QueryModulePageById(g)
+			pageDO, err := dbops.ModuleDao.QueryModulePageById(g)
 			if err != nil {
 				panic(err)
 			}
@@ -239,7 +239,7 @@ func (s *CMSUserService) QueryGroupAuths(groupId int) *[]map[string][]defs.Modul
 }
 
 func (s *CMSUserService) QueryGroupPages(groupId int) []int {
-	permissionList, err := dbops.ListGroupPagePermission(groupId)
+	permissionList, err := dbops.ModuleDao.ListGroupPagePermission(groupId)
 	if err != nil {
 		panic(err)
 	}
@@ -251,19 +251,19 @@ func (s *CMSUserService) QueryGroupPages(groupId int) []int {
 }
 
 func (s *CMSUserService) RefreshGroupAuths(groupId int, auths []int) {
-	err := dbops.RemoveGroupAllPagePermission(groupId)
+	err := dbops.ModuleDao.RemoveGroupAllPagePermission(groupId)
 	if err != nil {
 		panic(err)
 	}
 	for _, v := range auths {
-		pageDO, err := dbops.QueryModulePageById(v)
+		pageDO, err := dbops.ModuleDao.QueryModulePageById(v)
 		if err != nil {
 			panic(err)
 		}
 		if pageDO.Id == defs.ZERO || pageDO.Del == defs.DELETE {
 			panic(errs.ErrorModulePage)
 		}
-		err = dbops.AddGroupPagePermission(v, groupId)
+		err = dbops.ModuleDao.AddGroupPagePermission(v, groupId)
 		if err != nil {
 			panic(err)
 		}
@@ -271,13 +271,13 @@ func (s *CMSUserService) RefreshGroupAuths(groupId int, auths []int) {
 }
 
 func (s *CMSUserService) GetModuleList() *[]defs.CMSModuleVO {
-	moduleList, err := dbops.QueryModuleList()
+	moduleList, err := dbops.ModuleDao.QueryModuleList()
 	if err != nil {
 		panic(err)
 	}
 	moduleVOList := []defs.CMSModuleVO{}
 	for _, v := range *moduleList {
-		modulePageList, err := dbops.ListModulePage(v.Id)
+		modulePageList, err := dbops.ModuleDao.ListModulePage(v.Id)
 		if err != nil {
 			panic(err)
 		}

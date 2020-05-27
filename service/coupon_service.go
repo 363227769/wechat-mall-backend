@@ -31,11 +31,11 @@ func NewCouponService() ICouponService {
 }
 
 func (cs *couponService) GetCouponList(page, size, online int) (*[]model.WechatMallCouponDO, int) {
-	couponList, err := dbops.QueryCouponList(page, size, online)
+	couponList, err := dbops.CouponDao.List(page, size, online)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountCoupon(online)
+	total, err := dbops.CouponDao.CountCoupon(online)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func (cs *couponService) GetCouponList(page, size, online int) (*[]model.WechatM
 }
 
 func (cs *couponService) GetCouponById(id int) *model.WechatMallCouponDO {
-	coupon, err := dbops.QueryCouponById(id)
+	coupon, err := dbops.CouponDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -51,21 +51,21 @@ func (cs *couponService) GetCouponById(id int) *model.WechatMallCouponDO {
 }
 
 func (cs *couponService) AddCoupon(coupon *model.WechatMallCouponDO) {
-	err := dbops.InsertCoupon(coupon)
+	err := dbops.CouponDao.Insert(coupon)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (cs *couponService) UpdateCouponById(coupon *model.WechatMallCouponDO) {
-	err := dbops.UpdateCouponById(coupon)
+	err := dbops.CouponDao.UpdateById(coupon)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (cs *couponService) QueryCouponLogById(couponLogId int) *model.WechatMallCouponLogDO {
-	couponLogDO, err := dbops.QueryCouponLogById(couponLogId)
+	couponLogDO, err := dbops.CouponLogDao.QueryById(couponLogId)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +73,7 @@ func (cs *couponService) QueryCouponLogById(couponLogId int) *model.WechatMallCo
 }
 
 func (cs *couponService) RecordCouponLog(userId, couponId int) {
-	coupon, err := dbops.QueryCouponById(couponId)
+	coupon, err := dbops.CouponDao.QueryById(couponId)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +87,7 @@ func (cs *couponService) RecordCouponLog(userId, couponId int) {
 	couponLog.ExpireTime = coupon.EndTime
 	couponLog.Status = 0
 	couponLog.Code = utils.RandomNumberStr(12)
-	err = dbops.AddCouponLog(&couponLog)
+	err = dbops.CouponLogDao.Insert(&couponLog)
 	if err != nil {
 		panic(err)
 	}
@@ -95,17 +95,17 @@ func (cs *couponService) RecordCouponLog(userId, couponId int) {
 
 func (cs *couponService) QueryUserCoupon(userId, status, page, size int) (*[]defs.PortalUserCouponVO, int) {
 	// 刷新券的过期状态（优于调度任务）
-	err := dbops.UpdateCouponLogOverdueStatus(userId)
+	err := dbops.CouponLogDao.UpdateOverdueStatus(userId)
 	if err != nil {
 		panic(err)
 	}
-	couponLogList, err := dbops.QueryCouponLogList(userId, status, page, size)
+	couponLogList, err := dbops.CouponLogDao.List(userId, status, page, size)
 	if err != nil {
 		panic(err)
 	}
 	voList := []defs.PortalUserCouponVO{}
 	for _, v := range *couponLogList {
-		couponDO, err := dbops.QueryCouponById(v.CouponId)
+		couponDO, err := dbops.CouponDao.QueryById(v.CouponId)
 		if err != nil {
 			panic(err)
 		}
@@ -125,7 +125,7 @@ func (cs *couponService) QueryUserCoupon(userId, status, page, size int) (*[]def
 		couponVO.Description = couponDO.Description
 		voList = append(voList, couponVO)
 	}
-	total, err := dbops.CountCouponTakeNum(userId, defs.ALL, status, 0)
+	total, err := dbops.CouponLogDao.CountTakeNum(userId, defs.ALL, status, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -134,7 +134,7 @@ func (cs *couponService) QueryUserCoupon(userId, status, page, size int) (*[]def
 
 // 查询-优惠券领取的数量
 func (cs *couponService) CountCouponTakeNum(userId, couponId int) int {
-	total, err := dbops.CountCouponTakeNum(userId, couponId, defs.ALL, defs.ALL)
+	total, err := dbops.CouponLogDao.CountTakeNum(userId, couponId, defs.ALL, defs.ALL)
 	if err != nil {
 		panic(err)
 	}
@@ -143,7 +143,7 @@ func (cs *couponService) CountCouponTakeNum(userId, couponId int) int {
 
 func (cs *couponService) DoDeleteCouponLog(couponLog *model.WechatMallCouponLogDO) {
 	couponLog.Del = 1
-	err := dbops.UpdateCouponLogById(couponLog)
+	err := dbops.CouponLogDao.UpdateById(couponLog)
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +151,7 @@ func (cs *couponService) DoDeleteCouponLog(couponLog *model.WechatMallCouponLogD
 
 // 查询-所有的二级分类
 func (cs *couponService) GetAllSubCategory() *[]defs.PortalCategoryVO {
-	categoryList, err := dbops.QueryAllSubCategory()
+	categoryList, err := dbops.CategoryDao.QueryAllSubCategory()
 	if err != nil {
 		panic(err)
 	}

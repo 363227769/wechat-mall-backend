@@ -7,11 +7,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type couponLogDao struct{}
+
+var CouponLogDao = new(couponLogDao)
+
 const couponLogColumnList = `
 id, coupon_id, user_id, use_time, expire_time, status, code, order_no, is_del, create_time, update_time
 `
 
-func QueryCouponLogById(couponLogId int) (*model.WechatMallCouponLogDO, error) {
+func (*couponLogDao) QueryById(couponLogId int) (*model.WechatMallCouponLogDO, error) {
 	sql := "SELECT " + couponLogColumnList + " FROM wechat_mall_coupon_log WHERE id = " + strconv.Itoa(couponLogId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -29,7 +33,7 @@ func QueryCouponLogById(couponLogId int) (*model.WechatMallCouponLogDO, error) {
 	return &couponLog, nil
 }
 
-func QueryCouponLogList(userId, status, page, size int) (*[]model.WechatMallCouponLogDO, error) {
+func (*couponLogDao) List(userId, status, page, size int) (*[]model.WechatMallCouponLogDO, error) {
 	sql := "SELECT " + couponLogColumnList + " FROM wechat_mall_coupon_log WHERE is_del = 0"
 	sql += " AND user_id = " + strconv.Itoa(userId)
 	sql += " AND status = " + strconv.Itoa(status)
@@ -54,7 +58,7 @@ func QueryCouponLogList(userId, status, page, size int) (*[]model.WechatMallCoup
 	return &couponLogList, nil
 }
 
-func CountCouponTakeNum(userId, couponId, status int, del int) (int, error) {
+func (*couponLogDao) CountTakeNum(userId, couponId, status int, del int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_coupon_log WHERE 1 = 1"
 	if userId != defs.ALL {
 		sql += " AND user_id = " + strconv.Itoa(userId)
@@ -82,7 +86,7 @@ func CountCouponTakeNum(userId, couponId, status int, del int) (int, error) {
 	return total, nil
 }
 
-func UpdateCouponLogById(couponLog *model.WechatMallCouponLogDO) error {
+func (*couponLogDao) UpdateById(couponLog *model.WechatMallCouponLogDO) error {
 	sql := `
 UPDATE wechat_mall_coupon_log 
 SET coupon_id = ?, user_id = ?, use_time = ?, expire_time = ?, status = ?, code = ?, order_no = ?, 
@@ -98,7 +102,7 @@ WHERE id = ?
 	return err
 }
 
-func AddCouponLog(couponLog *model.WechatMallCouponLogDO) error {
+func (*couponLogDao) Insert(couponLog *model.WechatMallCouponLogDO) error {
 	sql := "INSERT INTO wechat_mall_coupon_log (" + couponLogColumnList[4:] + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -110,7 +114,7 @@ func AddCouponLog(couponLog *model.WechatMallCouponLogDO) error {
 }
 
 // 刷新券的过期状态
-func UpdateCouponLogOverdueStatus(userId int) error {
+func (*couponLogDao) UpdateOverdueStatus(userId int) error {
 	sql := "UPDATE wechat_mall_coupon_log SET status = 2 WHERE is_del = 0 AND expire_time < now() AND user_id = " + strconv.Itoa(userId)
 	_, err := dbConn.Exec(sql)
 	return err

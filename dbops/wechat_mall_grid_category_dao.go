@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type gridCategoryDao struct{}
+
+var GridCategoryDao = new(gridCategoryDao)
+
 const gridCategoryColumnList = `
 id, title, name, category_id, picture, is_del, create_time, update_time
 `
 
-func QueryGridCategoryList(page, size int) (*[]model.WechatMallGridCategoryDO, error) {
+func (*gridCategoryDao) List(page, size int) (*[]model.WechatMallGridCategoryDO, error) {
 	sql := "SELECT " + gridCategoryColumnList + " FROM wechat_mall_grid_category WHERE is_del = 0"
 	if page > 0 && size > 0 {
 		sql += " LIMIT " + strconv.Itoa((page-1)*size) + " ," + strconv.Itoa(size)
@@ -31,7 +35,7 @@ func QueryGridCategoryList(page, size int) (*[]model.WechatMallGridCategoryDO, e
 	return &gridCList, nil
 }
 
-func CountGridCategory() (int, error) {
+func (*gridCategoryDao) Count() (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_grid_category WHERE is_del = 0"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -47,7 +51,7 @@ func CountGridCategory() (int, error) {
 	return total, nil
 }
 
-func InsertGridCategory(gridC *model.WechatMallGridCategoryDO) error {
+func (*gridCategoryDao) Insert(gridC *model.WechatMallGridCategoryDO) error {
 	sql := "INSERT INTO wechat_mall_grid_category( " + gridCategoryColumnList[4:] + " ) VALUES(?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -60,7 +64,7 @@ func InsertGridCategory(gridC *model.WechatMallGridCategoryDO) error {
 	return nil
 }
 
-func QueryGridCategoryById(id int) (*model.WechatMallGridCategoryDO, error) {
+func (*gridCategoryDao) QueryById(id int) (*model.WechatMallGridCategoryDO, error) {
 	sql := "SELECT " + gridCategoryColumnList + " FROM wechat_mall_grid_category WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -76,7 +80,7 @@ func QueryGridCategoryById(id int) (*model.WechatMallGridCategoryDO, error) {
 	return &gridC, nil
 }
 
-func QueryGridCategoryByName(name string) (*model.WechatMallGridCategoryDO, error) {
+func (*gridCategoryDao) QueryByName(name string) (*model.WechatMallGridCategoryDO, error) {
 	sql := "SELECT " + gridCategoryColumnList + " FROM wechat_mall_grid_category WHERE is_del = 0 AND name = '" + name + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -92,7 +96,7 @@ func QueryGridCategoryByName(name string) (*model.WechatMallGridCategoryDO, erro
 	return &gridC, nil
 }
 
-func UpdateGridCategoryById(gridC *model.WechatMallGridCategoryDO) error {
+func (*gridCategoryDao) Update(gridC *model.WechatMallGridCategoryDO) error {
 	sql := `
 UPDATE wechat_mall_grid_category 
 SET title = ?, name = ?, category_id = ?, picture = ?, is_del = ?, update_time = ? 
@@ -109,7 +113,7 @@ WHERE id = ?
 	return nil
 }
 
-func CountGridByCategoryId(categoryId int) (int, error) {
+func (*gridCategoryDao) CountByCategoryId(categoryId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_grid_category WHERE is_del = 0 AND category_id = " + strconv.Itoa(categoryId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

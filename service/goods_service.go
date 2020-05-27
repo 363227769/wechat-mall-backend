@@ -31,11 +31,11 @@ func NewGoodsService() IGoodsService {
 }
 
 func (s *goodsService) GetGoodsList(keyword string, categoryId, online, page, size int) (*[]model.WechatMallGoodsDO, int) {
-	goodsList, err := dbops.QueryGoodsList(keyword, "", categoryId, online, page, size)
+	goodsList, err := dbops.GoodsDao.List(keyword, "", categoryId, online, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountGoods(keyword, categoryId, online)
+	total, err := dbops.GoodsDao.Count(keyword, categoryId, online)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func (s *goodsService) GetGoodsList(keyword string, categoryId, online, page, si
 }
 
 func (s *goodsService) GetGoodsById(id int) *model.WechatMallGoodsDO {
-	goods, err := dbops.QueryGoodsById(id)
+	goods, err := dbops.GoodsDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -51,14 +51,14 @@ func (s *goodsService) GetGoodsById(id int) *model.WechatMallGoodsDO {
 }
 
 func (s *goodsService) UpdateGoodsById(goods *model.WechatMallGoodsDO) {
-	err := dbops.UpdateGoodsById(goods)
+	err := dbops.GoodsDao.UpdateById(goods)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s *goodsService) AddGoods(goods *model.WechatMallGoodsDO) int {
-	id, err := dbops.AddGoods(goods)
+	id, err := dbops.GoodsDao.Insert(goods)
 	if err != nil {
 		panic(err)
 	}
@@ -66,20 +66,20 @@ func (s *goodsService) AddGoods(goods *model.WechatMallGoodsDO) int {
 }
 
 func (s *goodsService) GetGoodsSpecList(goodsId int) *[]defs.CMSGoodsSpecVO {
-	specList, err := dbops.GetGoodsSpecList(goodsId)
+	specList, err := dbops.GoodsSpec.ListByGoodsId(goodsId)
 	if err != nil {
 		panic(err)
 	}
 	specVOList := []defs.CMSGoodsSpecVO{}
 	for _, v := range *specList {
-		specificationDO, err := dbops.QuerySpecificationById(v.SpecId)
+		specificationDO, err := dbops.SpecDao.QueryById(v.SpecId)
 		if err != nil {
 			panic(err)
 		}
 		if specificationDO.Id == defs.ZERO || specificationDO.Del == defs.DELETE {
 			panic(errs.ErrorSpecificationAttr)
 		}
-		attrList, err := dbops.QuerySpecificationAttrList(v.SpecId)
+		attrList, err := dbops.SpecAttrDao.ListBySpecId(v.SpecId)
 		if err != nil {
 			panic(err)
 		}
@@ -102,7 +102,7 @@ func (s *goodsService) GetGoodsSpecList(goodsId int) *[]defs.CMSGoodsSpecVO {
 }
 
 func (s *goodsService) AddGoodsSpec(goodsId int, specList []int) {
-	err := dbops.DeleteGoodsSpec(goodsId)
+	err := dbops.GoodsSpec.DeleteByGoodsId(goodsId)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +110,7 @@ func (s *goodsService) AddGoodsSpec(goodsId int, specList []int) {
 		spec := model.WechatMallGoodsSpecDO{}
 		spec.GoodsId = goodsId
 		spec.SpecId = v
-		err := dbops.InsertGoodsSpec(&spec)
+		err := dbops.GoodsSpec.Insert(&spec)
 		if err != nil {
 			panic(err)
 		}
@@ -130,17 +130,17 @@ func (s *goodsService) QueryPortalGoodsList(keyword string, sort, categoryId, pa
 	default:
 		order = ""
 	}
-	goodsList, err := dbops.QueryGoodsList(keyword, order, categoryId, defs.ONLINE, page, size)
+	goodsList, err := dbops.GoodsDao.List(keyword, order, categoryId, defs.ONLINE, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountGoods(keyword, categoryId, defs.ONLINE)
+	total, err := dbops.GoodsDao.Count(keyword, categoryId, defs.ONLINE)
 	if err != nil {
 		panic(err)
 	}
 	goodsVOList := []defs.PortalGoodsListVO{}
 	for _, v := range *goodsList {
-		humanNum, err := dbops.CountBuyGoodsUserNum(v.Id)
+		humanNum, err := dbops.OrderGoodsDao.CountBuyUserNum(v.Id)
 		if err != nil {
 			panic(err)
 		}
@@ -156,14 +156,14 @@ func (s *goodsService) QueryPortalGoodsList(keyword string, sort, categoryId, pa
 }
 
 func (s *goodsService) QueryPortalGoodsDetail(goodsId int) *defs.PortalGoodsInfo {
-	goodsDO, err := dbops.QueryGoodsById(goodsId)
+	goodsDO, err := dbops.GoodsDao.QueryById(goodsId)
 	if err != nil {
 		panic(err)
 	}
 	if goodsDO.Id == defs.ZERO || goodsDO.Del == defs.DELETE || goodsDO.Online == defs.OFFLINE {
 		panic(errs.ErrorGoods)
 	}
-	skuDOList, err := dbops.GetSKUList("", goodsId, defs.ONLINE, 0, 0)
+	skuDOList, err := dbops.SkuDao.GetSKUList("", goodsId, defs.ONLINE, 0, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -202,7 +202,7 @@ func extractSkuVOList(skuDOList *[]model.WechatMallSkuDO) []defs.PortalSkuVO {
 
 func extraceSpecVOList(goodsId int, skuDOList *[]model.WechatMallSkuDO) []defs.PortalSpecVO {
 	specVOMap, specAttrVOMap := extraceSpecAttrVOList(skuDOList)
-	specList, err := dbops.GetGoodsSpecList(goodsId)
+	specList, err := dbops.GoodsSpec.ListByGoodsId(goodsId)
 	if err != nil {
 		panic(err)
 	}
@@ -262,7 +262,7 @@ func extraceSpecAttrVOList(skuDOList *[]model.WechatMallSkuDO) (map[int]string, 
 }
 
 func (s *goodsService) CountCategoryGoods(categoryId int) int {
-	total, err := dbops.CountCategoryGoods(categoryId)
+	total, err := dbops.GoodsDao.CountByCategoryId(categoryId)
 	if err != nil {
 		panic(err)
 	}
@@ -271,7 +271,7 @@ func (s *goodsService) CountCategoryGoods(categoryId int) int {
 
 // 统计-商品规格-关联的商品
 func (s *goodsService) CountGoodsSpecBySpecId(specId int) int {
-	goodsNum, err := dbops.CountGoodsSpecBySpecId(specId)
+	goodsNum, err := dbops.GoodsSpec.CountBySpecId(specId)
 	if err != nil {
 		panic(err)
 	}

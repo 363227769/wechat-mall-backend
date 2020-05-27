@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type browseRecordDao struct{}
+
+var BrowseRecordDao = new(browseRecordDao)
+
 const browseColumnList = `
 id, user_id, goods_id, picture, title, price, is_del, create_time, update_time
 `
 
-func InsertBrowseRecord(record *model.WechatMallGoodsBrowseRecord) error {
+func (*browseRecordDao) Insert(record *model.WechatMallGoodsBrowseRecord) error {
 	sql := "INSERT INTO wechat_mall_goods_browse_record (" + browseColumnList[4:] + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -20,7 +24,7 @@ func InsertBrowseRecord(record *model.WechatMallGoodsBrowseRecord) error {
 	return err
 }
 
-func SelectGoodsBrowse(userId, goodsId int) (*model.WechatMallGoodsBrowseRecord, error) {
+func (*browseRecordDao) List(userId, goodsId int) (*model.WechatMallGoodsBrowseRecord, error) {
 	sql := "SELECT " + browseColumnList + " FROM wechat_mall_goods_browse_record WHERE is_del = 0 AND user_id = " +
 		strconv.Itoa(userId) + " AND goods_id = " + strconv.Itoa(goodsId)
 
@@ -39,13 +43,13 @@ func SelectGoodsBrowse(userId, goodsId int) (*model.WechatMallGoodsBrowseRecord,
 	return &record, nil
 }
 
-func DeleteBrowseRecordById(id int) error {
+func (*browseRecordDao) DeleteById(id int) error {
 	sql := "UPDATE wechat_mall_goods_browse_record SET is_del = 1 WHERE id = " + strconv.Itoa(id)
 	_, err := dbConn.Exec(sql)
 	return err
 }
 
-func SelectGoodsBrowseByUserId(userId, page, size int) (*[]model.WechatMallGoodsBrowseRecord, error) {
+func (*browseRecordDao) ListByPage(userId, page, size int) (*[]model.WechatMallGoodsBrowseRecord, error) {
 	sql := "SELECT " + browseColumnList + " FROM wechat_mall_goods_browse_record WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	if page > 0 && size > 0 {
 		sql += " ORDER BY update_time DESC LIMIT " + strconv.Itoa((page-1)*size) + ", " + strconv.Itoa(size)
@@ -67,7 +71,7 @@ func SelectGoodsBrowseByUserId(userId, page, size int) (*[]model.WechatMallGoods
 	return &records, nil
 }
 
-func CountGoodsBrowseByUserId(userId int) (int, error) {
+func (*browseRecordDao) CountByUserId(userId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_goods_browse_record WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

@@ -7,11 +7,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type couponDao struct{}
+
+var CouponDao = new(couponDao)
+
 const couponColumnList = `
 id, title, full_money, minus, rate, type, grant_num, limit_num, start_time, end_time, description, online, is_del, create_time, update_time
 `
 
-func QueryCouponList(page, size, online int) (*[]model.WechatMallCouponDO, error) {
+func (*couponDao) List(page, size, online int) (*[]model.WechatMallCouponDO, error) {
 	sql := "SELECT " + couponColumnList + " FROM wechat_mall_coupon WHERE is_del = 0"
 	if online != defs.ALL {
 		sql += " AND online = " + strconv.Itoa(online)
@@ -40,7 +44,7 @@ func QueryCouponList(page, size, online int) (*[]model.WechatMallCouponDO, error
 	return &couponList, nil
 }
 
-func CountCoupon(online int) (int, error) {
+func (*couponDao) CountCoupon(online int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_coupon WHERE is_del = 0"
 	if online != defs.ALL {
 		sql += " AND online = " + strconv.Itoa(online)
@@ -59,7 +63,7 @@ func CountCoupon(online int) (int, error) {
 	return total, nil
 }
 
-func QueryCouponById(id int) (*model.WechatMallCouponDO, error) {
+func (*couponDao) QueryById(id int) (*model.WechatMallCouponDO, error) {
 	sql := "SELECT " + couponColumnList + " FROM wechat_mall_coupon WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -77,7 +81,7 @@ func QueryCouponById(id int) (*model.WechatMallCouponDO, error) {
 	return &coupon, nil
 }
 
-func InsertCoupon(coupon *model.WechatMallCouponDO) error {
+func (*couponDao) Insert(coupon *model.WechatMallCouponDO) error {
 	sql := "INSERT INTO wechat_mall_coupon( " + couponColumnList[4:] + " ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -91,7 +95,7 @@ func InsertCoupon(coupon *model.WechatMallCouponDO) error {
 	return nil
 }
 
-func UpdateCouponById(coupon *model.WechatMallCouponDO) error {
+func (*couponDao) UpdateById(coupon *model.WechatMallCouponDO) error {
 	sql := `
 UPDATE wechat_mall_coupon 
 SET title = ?, full_money = ?, minus = ?, rate = ?, type = ?, grant_num = ?, limit_num = ?, start_time = ?, 

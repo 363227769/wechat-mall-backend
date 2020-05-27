@@ -6,11 +6,15 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type cartDao struct{}
+
+var CartDao = new(cartDao)
+
 const cartColumnList = `
 id, user_id, goods_id, sku_id, num, is_del, create_time, update_time
 `
 
-func QueryCartList(userId, page, size int) (*[]model.WechatMallUserCartDO, error) {
+func (*cartDao) ListByUserId(userId, page, size int) (*[]model.WechatMallUserCartDO, error) {
 	sql := "SELECT " + cartColumnList + " FROM wechat_mall_user_cart WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	if page > 0 && size > 0 {
 		sql += " ORDER BY update_time DESC LIMIT " + strconv.Itoa((page-1)*page) + " , " + strconv.Itoa(size)
@@ -32,7 +36,7 @@ func QueryCartList(userId, page, size int) (*[]model.WechatMallUserCartDO, error
 }
 
 // 购物车-数量
-func CountCartGoods(userId int) (int, error) {
+func (*cartDao) CountCartGoods(userId int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_user_cart WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -49,7 +53,7 @@ func CountCartGoods(userId int) (int, error) {
 }
 
 // 购物车-商品数量
-func CoundCartGoodsNum(userId int) (int, error) {
+func (*cartDao) CoundCartGoodsNum(userId int) (int, error) {
 	sql := "SELECT IFNULL(SUM(num), 0) FROM wechat_mall_user_cart WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -65,7 +69,7 @@ func CoundCartGoodsNum(userId int) (int, error) {
 	return total, nil
 }
 
-func AddUserCart(cartDO *model.WechatMallUserCartDO) error {
+func (*cartDao) Insert(cartDO *model.WechatMallUserCartDO) error {
 	sql := "INSERT INTO wechat_mall_user_cart ( " + cartColumnList[4:] + " ) VALUES (?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -75,7 +79,7 @@ func AddUserCart(cartDO *model.WechatMallUserCartDO) error {
 	return err
 }
 
-func QueryCartByParams(userId, goodsId, skuId int) (*model.WechatMallUserCartDO, error) {
+func (*cartDao) QueryByParams(userId, goodsId, skuId int) (*model.WechatMallUserCartDO, error) {
 	sql := "SELECT " + cartColumnList + " FROM wechat_mall_user_cart WHERE is_del = 0 AND user_id = ? AND goods_id = ? AND sku_id = ?"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -95,7 +99,7 @@ func QueryCartByParams(userId, goodsId, skuId int) (*model.WechatMallUserCartDO,
 	return &cartDO, nil
 }
 
-func UpdateCartById(cartDO *model.WechatMallUserCartDO) error {
+func (*cartDao) UpdateById(cartDO *model.WechatMallUserCartDO) error {
 	sql := `
 UPDATE wechat_mall_user_cart 
 SET user_id = ?, goods_id = ?, num = ?, is_del = ?, update_time = ?
@@ -109,7 +113,7 @@ WHERE id = ?
 	return err
 }
 
-func SelectCartById(id int) (*model.WechatMallUserCartDO, error) {
+func (*cartDao) QueryById(id int) (*model.WechatMallUserCartDO, error) {
 	sql := "SELECT " + cartColumnList + " FROM wechat_mall_user_cart WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {

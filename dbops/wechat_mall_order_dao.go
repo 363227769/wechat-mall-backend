@@ -7,12 +7,16 @@ import (
 	"wechat-mall-backend/model"
 )
 
+type orderDao struct{}
+
+var OrderDao = new(orderDao)
+
 const orderColumnList = `
 id, order_no, user_id, pay_amount, goods_amount, discount_amount, dispatch_amount, pay_time, deliver_time,
 finish_time, status, address_id, address_snapshot, wxapp_prepay_id, transaction_id, remark, is_del, create_time, update_time
 `
 
-func QueryOrderByOrderNo(orderNo string) (*model.WechatMallOrderDO, error) {
+func (*orderDao) QueryByOrderNo(orderNo string) (*model.WechatMallOrderDO, error) {
 	sql := "SELECT " + orderColumnList + " FROM wechat_mall_order WHERE order_no = '" + orderNo + "'"
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -31,7 +35,7 @@ func QueryOrderByOrderNo(orderNo string) (*model.WechatMallOrderDO, error) {
 	return &order, nil
 }
 
-func QueryOrderById(id int) (*model.WechatMallOrderDO, error) {
+func (*orderDao) QueryById(id int) (*model.WechatMallOrderDO, error) {
 	sql := "SELECT " + orderColumnList + " FROM wechat_mall_order WHERE id = " + strconv.Itoa(id)
 	rows, err := dbConn.Query(sql)
 	if err != nil {
@@ -50,7 +54,7 @@ func QueryOrderById(id int) (*model.WechatMallOrderDO, error) {
 	return &order, nil
 }
 
-func ListOrderByParams(userId, status, page, size int) (*[]model.WechatMallOrderDO, error) {
+func (*orderDao) ListByParams(userId, status, page, size int) (*[]model.WechatMallOrderDO, error) {
 	sql := "SELECT " + orderColumnList + " FROM wechat_mall_order WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)
@@ -77,7 +81,7 @@ func ListOrderByParams(userId, status, page, size int) (*[]model.WechatMallOrder
 	return &orderList, nil
 }
 
-func CountOrderByParams(userId, status int) (int, error) {
+func (*orderDao) CountByParams(userId, status int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_order WHERE is_del = 0 AND user_id = " + strconv.Itoa(userId)
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)
@@ -96,7 +100,7 @@ func CountOrderByParams(userId, status int) (int, error) {
 	return total, nil
 }
 
-func AddOrder(order *model.WechatMallOrderDO) error {
+func (*orderDao) Insert(order *model.WechatMallOrderDO) error {
 	sql := "INSERT INTO wechat_mall_order (" + orderColumnList[4:] + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := dbConn.Prepare(sql)
 	if err != nil {
@@ -108,7 +112,7 @@ func AddOrder(order *model.WechatMallOrderDO) error {
 	return err
 }
 
-func UpdateOrderById(order *model.WechatMallOrderDO) error {
+func (*orderDao) UpdateById(order *model.WechatMallOrderDO) error {
 	sql := "UPDATE wechat_mall_order SET update_time = now() "
 	if order.PayAmount != "" {
 		sql += ", pay_amount = '" + order.PayAmount + "'"
@@ -148,7 +152,7 @@ func UpdateOrderById(order *model.WechatMallOrderDO) error {
 	return err
 }
 
-func UpdateOrderRemark(id int, remark string) error {
+func (*orderDao) UpdateRemark(id int, remark string) error {
 	sql := "UPDATE wechat_mall_order SET update_time = now(), remark = ? WHERE id = ?"
 	stmt, e := dbConn.Prepare(sql)
 	if e != nil {
@@ -158,7 +162,7 @@ func UpdateOrderRemark(id int, remark string) error {
 	return e
 }
 
-func QueryOrderSaleData(page, size int) (*[]defs.OrderSaleData, error) {
+func (*orderDao) QuerySaleData(page, size int) (*[]defs.OrderSaleData, error) {
 	sql := `
 SELECT 
    DATE_FORMAT(create_time, '%Y-%m-%d') AS createTime, 
@@ -188,7 +192,7 @@ ORDER BY createTime DESC
 	return &saleDataList, nil
 }
 
-func CountOrderNum(userId, status int) (int, error) {
+func (*orderDao) CountNum(userId, status int) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_order WHERE is_del = 0 AND status = " + strconv.Itoa(status)
 	if userId != defs.ALL {
 		sql += " AND user_id = " + strconv.Itoa(userId)
@@ -207,7 +211,7 @@ func CountOrderNum(userId, status int) (int, error) {
 	return total, nil
 }
 
-func SelectCMSOrderList(status, searchType int, keyword, startTime, endTime string, page, size int) (*[]model.WechatMallOrderDO, error) {
+func (*orderDao) CMSOrderList(status, searchType int, keyword, startTime, endTime string, page, size int) (*[]model.WechatMallOrderDO, error) {
 	sql := "SELECT " + orderColumnList + " FROM wechat_mall_order WHERE 1 = 1"
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)
@@ -254,7 +258,7 @@ func SelectCMSOrderList(status, searchType int, keyword, startTime, endTime stri
 	return &orderList, nil
 }
 
-func SelectCMSOrderNum(status, searchType int, keyword, startTime, endTime string) (int, error) {
+func (*orderDao) CountCMSOrderNum(status, searchType int, keyword, startTime, endTime string) (int, error) {
 	sql := "SELECT COUNT(*) FROM wechat_mall_order WHERE 1 = 1"
 	if status != defs.ALL {
 		sql += " AND status = " + strconv.Itoa(status)

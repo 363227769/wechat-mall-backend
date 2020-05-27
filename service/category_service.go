@@ -22,11 +22,11 @@ func NewCategoryService() ICategoryService {
 }
 
 func (cs *categoryService) GetCategoryList(pid, page, size int) (*[]model.WechatMallCategoryDO, int) {
-	cateList, err := dbops.QueryCategoryList(pid, page, size)
+	cateList, err := dbops.CategoryDao.List(pid, page, size)
 	if err != nil {
 		panic(err)
 	}
-	total, err := dbops.CountCategory(pid)
+	total, err := dbops.CategoryDao.CountByPid(pid)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +34,7 @@ func (cs *categoryService) GetCategoryList(pid, page, size int) (*[]model.Wechat
 }
 
 func (cs *categoryService) GetCategoryById(id int) *model.WechatMallCategoryDO {
-	category, err := dbops.QueryCategoryById(id)
+	category, err := dbops.CategoryDao.QueryById(id)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +42,7 @@ func (cs *categoryService) GetCategoryById(id int) *model.WechatMallCategoryDO {
 }
 
 func (cs *categoryService) GetCategoryByName(name string) *model.WechatMallCategoryDO {
-	category, err := dbops.QueryCategoryByName(name)
+	category, err := dbops.CategoryDao.QueryByName(name)
 	if err != nil {
 		panic(err)
 	}
@@ -50,14 +50,14 @@ func (cs *categoryService) GetCategoryByName(name string) *model.WechatMallCateg
 }
 
 func (cs *categoryService) AddCategory(category *model.WechatMallCategoryDO) {
-	err := dbops.InsertCategory(category)
+	err := dbops.CategoryDao.Insert(category)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (cs *categoryService) UpdateCategory(category *model.WechatMallCategoryDO) {
-	err := dbops.UpdateCategoryById(category)
+	err := dbops.CategoryDao.Update(category)
 	if err != nil {
 		panic(err)
 	}
@@ -67,22 +67,22 @@ func (cs *categoryService) UpdateCategory(category *model.WechatMallCategoryDO) 
 // 同步其子分类和商品的上下架状态
 func syncSubCategoryAndGoodsOnline(parentId, categoryId, online int) {
 	if parentId == 0 {
-		err := dbops.UpdateSubCategoryOnline(categoryId, online)
+		err := dbops.CategoryDao.UpdateSubCategoryOnline(categoryId, online)
 		if err != nil {
 			panic(err)
 		}
-		ids, err := dbops.QuerySubCategoryByParentId(categoryId)
+		ids, err := dbops.CategoryDao.QuerySubCategoryByParentId(categoryId)
 		if err != nil {
 			panic(err)
 		}
 		for _, v := range *ids {
-			err := dbops.UpdateCategoryGoodsOnlineStatus(v, online)
+			err := dbops.GoodsDao.UpdateOnlineStatus(v, online)
 			if err != nil {
 				panic(err)
 			}
 		}
 	} else {
-		err := dbops.UpdateCategoryGoodsOnlineStatus(categoryId, online)
+		err := dbops.GoodsDao.UpdateOnlineStatus(categoryId, online)
 		if err != nil {
 			panic(err)
 		}
